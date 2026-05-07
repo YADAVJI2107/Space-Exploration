@@ -4,6 +4,7 @@ export const fallbackSimulationConfig: SimulationConfig = {
   timeScale: 45,
   gravitationalConstant: 6.6743e-11,
   galacticSpeed: 0.16,
+  gravityScale: 1,
   backendDriven: false,
   nBodyEnabled: false,
   showOrbits: true,

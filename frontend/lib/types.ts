@@ -29,6 +29,7 @@ export interface SimulationConfig {
   timeScale: number;
   gravitationalConstant: number;
   galacticSpeed: number;
+  gravityScale: number;
   backendDriven: boolean;
   nBodyEnabled: boolean;
   showOrbits: boolean;

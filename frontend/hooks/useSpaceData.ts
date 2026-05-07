@@ -14,6 +14,7 @@ export function useSpaceData() {
   const setPaused = useSimulationStore((state) => state.setPaused);
   const setShowOrbits = useSimulationStore((state) => state.setShowOrbits);
   const setNBodyEnabled = useSimulationStore((state) => state.setNBodyEnabled);
+  const setGravityScale = useSimulationStore((state) => state.setGravityScale);
 
   useEffect(() => {
     let isMounted = true;
@@ -24,12 +25,14 @@ export function useSpaceData() {
           return;
         }
 
+        const mergedConfig = { ...fallbackSimulationConfig, ...configPayload };
         setPlanets(planetPayload);
-        setConfig(configPayload);
-        setTimeScale(configPayload.timeScale);
-        setPaused(configPayload.paused);
-        setShowOrbits(configPayload.showOrbits);
-        setNBodyEnabled(configPayload.nBodyEnabled);
+        setConfig(mergedConfig);
+        setTimeScale(mergedConfig.timeScale);
+        setPaused(mergedConfig.paused);
+        setShowOrbits(mergedConfig.showOrbits);
+        setNBodyEnabled(mergedConfig.nBodyEnabled);
+        setGravityScale(mergedConfig.gravityScale);
       })
       .finally(() => {
         if (isMounted) {
@@ -40,7 +43,7 @@ export function useSpaceData() {
     return () => {
       isMounted = false;
     };
-  }, [setNBodyEnabled, setPaused, setShowOrbits, setTimeScale]);
+  }, [setGravityScale, setNBodyEnabled, setPaused, setShowOrbits, setTimeScale]);
 
   return { planets, config, isLoading };
 }

@@ -9,7 +9,8 @@ import {
   Pause,
   Play,
   Rocket,
-  Settings2
+  Settings2,
+  Sparkles
 } from "lucide-react";
 import { updateSimulationConfig } from "@/lib/api";
 import { formatNumber } from "@/lib/orbital";
@@ -29,6 +30,10 @@ export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
   const followTarget = useSimulationStore((state) => state.followTarget);
   const showOrbits = useSimulationStore((state) => state.showOrbits);
   const nBodyEnabled = useSimulationStore((state) => state.nBodyEnabled);
+  const gravityScale = useSimulationStore((state) => state.gravityScale);
+  const showGalaxy = useSimulationStore((state) => state.showGalaxy);
+  const showNebula = useSimulationStore((state) => state.showNebula);
+  const showDust = useSimulationStore((state) => state.showDust);
   const setTimeScale = useSimulationStore((state) => state.setTimeScale);
   const togglePaused = useSimulationStore((state) => state.togglePaused);
   const setViewMode = useSimulationStore((state) => state.setViewMode);
@@ -36,6 +41,10 @@ export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
   const setFollowTarget = useSimulationStore((state) => state.setFollowTarget);
   const setShowOrbits = useSimulationStore((state) => state.setShowOrbits);
   const setNBodyEnabled = useSimulationStore((state) => state.setNBodyEnabled);
+  const setGravityScale = useSimulationStore((state) => state.setGravityScale);
+  const setShowGalaxy = useSimulationStore((state) => state.setShowGalaxy);
+  const setShowNebula = useSimulationStore((state) => state.setShowNebula);
+  const setShowDust = useSimulationStore((state) => state.setShowDust);
 
   const activePlanet = planets.find((planet) => planet.name === selectedPlanet) ?? planets[2];
 
@@ -143,6 +152,32 @@ export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
           />
         </div>
 
+        <div className="mt-4 rounded-md border border-slate-600/30 bg-black/20 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <Sparkles size={16} className="text-cyan-200" />
+              Deep space layers
+            </label>
+          </div>
+          <div className="mt-3 grid gap-2 text-xs text-slate-300">
+            <OptionToggle
+              label="Galaxy backdrop"
+              checked={showGalaxy}
+              onChange={(value) => setShowGalaxy(value)}
+            />
+            <OptionToggle
+              label="Nebula bloom"
+              checked={showNebula}
+              onChange={(value) => setShowNebula(value)}
+            />
+            <OptionToggle
+              label="Cosmic dust"
+              checked={showDust}
+              onChange={(value) => setShowDust(value)}
+            />
+          </div>
+        </div>
+
         <div className="mt-4 flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
             <Settings2 size={16} className="text-cyan-200" />
@@ -215,17 +250,39 @@ export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
             <Info label="Tilt" value={`${formatNumber(activePlanet.axialTilt, 2)} deg`} />
           </dl>
 
-          <label className="mt-4 flex items-center justify-between gap-3 rounded-md border border-slate-600/30 bg-black/20 px-3 py-2 text-sm text-slate-200">
-            <span>Simplified N-body API</span>
-            <input
-              type="checkbox"
-              checked={nBodyEnabled}
-              onChange={(event) => {
-                setNBodyEnabled(event.target.checked);
-                syncUpdate({ nBodyEnabled: event.target.checked });
-              }}
-            />
-          </label>
+          <div className="mt-4 grid gap-3 rounded-md border border-slate-600/30 bg-black/20 px-3 py-2 text-sm text-slate-200">
+            <label className="flex items-center justify-between gap-3">
+              <span>Simplified N-body</span>
+              <input
+                type="checkbox"
+                checked={nBodyEnabled}
+                onChange={(event) => {
+                  setNBodyEnabled(event.target.checked);
+                  syncUpdate({ nBodyEnabled: event.target.checked });
+                }}
+              />
+            </label>
+            <div>
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span>Gravity scale</span>
+                <span>{formatNumber(gravityScale, 2)}x</span>
+              </div>
+              <input
+                className="simulation-slider mt-2 w-full"
+                type="range"
+                aria-label="Gravity scale"
+                min={0.6}
+                max={1.6}
+                step={0.05}
+                value={gravityScale}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  setGravityScale(value);
+                  syncUpdate({ gravityScale: value });
+                }}
+              />
+            </div>
+          </div>
         </aside>
       ) : null}
     </section>
@@ -263,5 +320,26 @@ function Info({ label, value }: { label: string; value: string }) {
       <dt className="text-xs text-slate-400">{label}</dt>
       <dd className="mt-1 text-sm font-semibold text-slate-100">{value}</dd>
     </div>
+  );
+}
+
+function OptionToggle({
+  label,
+  checked,
+  onChange
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between gap-3 rounded-md border border-slate-600/25 bg-slate-950/40 px-3 py-2">
+      <span>{label}</span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+    </label>
   );
 }
