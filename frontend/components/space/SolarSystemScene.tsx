@@ -118,7 +118,7 @@ export function SolarSystemScene({ planets, config }: SolarSystemSceneProps) {
     <>
       <PerspectiveCamera makeDefault position={[0, 14, 31]} fov={55} near={0.02} far={1400} />
 
-      <fog attach="fog" args={["#02030a", 45, 220]} />
+      <fog attach="fog" args={["#070b16", 45, 220]} />
       <ambientLight intensity={0.055} />
       <hemisphereLight intensity={0.08} color="#dbeafe" groundColor="#020617" />
       {showGalaxy ? <GalaxyBackdrop /> : null}
