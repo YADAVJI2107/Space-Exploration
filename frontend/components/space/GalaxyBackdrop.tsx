@@ -3,17 +3,13 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { seededRandom } from "@/lib/seeded-random";
 
 interface GalaxyBackdropProps {
   starCount?: number;
   radius?: number;
   arms?: number;
   thickness?: number;
-}
-
-function seededRandom(seed: number) {
-  const value = Math.sin(seed * 12.9898) * 43758.5453;
-  return value - Math.floor(value);
 }
 
 export function GalaxyBackdrop({

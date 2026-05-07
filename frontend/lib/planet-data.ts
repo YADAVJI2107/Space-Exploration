@@ -11,6 +11,10 @@ export const fallbackSimulationConfig: SimulationConfig = {
   paused: false
 };
 
+export function mergeSimulationConfig(config: Partial<SimulationConfig> | undefined) {
+  return { ...fallbackSimulationConfig, ...config };
+}
+
 export const fallbackPlanets: Planet[] = [
   {
     name: "Mercury",

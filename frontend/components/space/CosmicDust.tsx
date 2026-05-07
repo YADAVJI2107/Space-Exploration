@@ -3,15 +3,11 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { seededRandom } from "@/lib/seeded-random";
 
 interface CosmicDustProps {
   count?: number;
   radius?: number;
-}
-
-function seededRandom(seed: number) {
-  const value = Math.sin(seed * 12.9898) * 43758.5453;
-  return value - Math.floor(value);
 }
 
 export function CosmicDust({ count = 1200, radius = 55 }: CosmicDustProps) {

@@ -154,10 +154,10 @@ export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
 
         <div className="mt-4 rounded-md border border-slate-600/30 bg-black/20 p-3">
           <div className="flex items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-sm font-medium">
+            <h3 className="flex items-center gap-2 text-sm font-medium">
               <Sparkles size={16} className="text-cyan-200" />
               Deep space layers
-            </label>
+            </h3>
           </div>
           <div className="mt-3 grid gap-2 text-xs text-slate-300">
             <OptionToggle

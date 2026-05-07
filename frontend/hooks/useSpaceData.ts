@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { fetchPlanets, fetchSimulationConfig } from "@/lib/api";
-import { fallbackPlanets, fallbackSimulationConfig } from "@/lib/planet-data";
+import {
+  fallbackPlanets,
+  fallbackSimulationConfig,
+  mergeSimulationConfig
+} from "@/lib/planet-data";
 import { useSimulationStore } from "@/lib/store";
 import type { Planet, SimulationConfig } from "@/lib/types";
 
@@ -25,7 +29,7 @@ export function useSpaceData() {
           return;
         }
 
-        const mergedConfig = { ...fallbackSimulationConfig, ...configPayload };
+        const mergedConfig = mergeSimulationConfig(configPayload);
         setPlanets(planetPayload);
         setConfig(mergedConfig);
         setTimeScale(mergedConfig.timeScale);

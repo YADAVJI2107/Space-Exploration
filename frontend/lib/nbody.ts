@@ -65,6 +65,7 @@ export function stepNBodyState({
     accelerations[name].set(0, 0, 0);
   });
 
+  // Pairwise gravity accumulation is O(n²) and kept small for the planet count.
   for (let index = 0; index < names.length; index += 1) {
     const name = names[index];
     const position = positions[name];
