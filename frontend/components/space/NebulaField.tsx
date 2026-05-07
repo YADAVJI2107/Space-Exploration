@@ -53,6 +53,7 @@ export function NebulaField({
         const angle = (index / cloudCount) * Math.PI * 2;
         const dist = radius * (0.35 + seededRandom(seed) * 0.4);
         return {
+          id: `cloud-${index}-${Math.round(seed * 1000)}`,
           position: new THREE.Vector3(
             Math.cos(angle) * dist,
             (seededRandom(seed + 1) - 0.5) * radius * 0.2,
@@ -94,8 +95,8 @@ export function NebulaField({
       </points>
 
       <group ref={cloudRef}>
-        {clouds.map((cloud, index) => (
-          <mesh key={`nebula-cloud-${index}`} position={cloud.position} scale={cloud.scale}>
+        {clouds.map((cloud) => (
+          <mesh key={cloud.id} position={cloud.position} scale={cloud.scale}>
             <sphereGeometry args={[1, 32, 32]} />
             <meshBasicMaterial
               color={cloud.color}

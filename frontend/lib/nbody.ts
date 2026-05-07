@@ -65,8 +65,8 @@ export function stepNBodyState({
     accelerations[name].set(0, 0, 0);
   });
 
-  for (let index = 0; index < names.length; index += 1) {
-    const name = names[index];
+  for (let bodyIndex = 0; bodyIndex < names.length; bodyIndex += 1) {
+    const name = names[bodyIndex];
     const position = positions[name];
     const acceleration = accelerations[name];
 
@@ -78,13 +78,17 @@ export function stepNBodyState({
   }
 
   // Pairwise gravity accumulation is O(n²), which is acceptable for the current 8-10 body set.
-  for (let index = 0; index < names.length; index += 1) {
-    const name = names[index];
+  for (let bodyIndex = 0; bodyIndex < names.length; bodyIndex += 1) {
+    const name = names[bodyIndex];
     const position = positions[name];
     const acceleration = accelerations[name];
 
-    for (let otherIndex = index + 1; otherIndex < names.length; otherIndex += 1) {
-      const otherName = names[otherIndex];
+    for (
+      let otherBodyIndex = bodyIndex + 1;
+      otherBodyIndex < names.length;
+      otherBodyIndex += 1
+    ) {
+      const otherName = names[otherBodyIndex];
       direction.copy(positions[otherName]).sub(position);
       const distanceSq = direction.lengthSq() + softening;
       const invDistance = 1 / Math.sqrt(distanceSq);
