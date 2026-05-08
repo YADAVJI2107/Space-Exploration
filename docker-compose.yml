@@ -19,8 +19,13 @@ services:
   backend:
     build:
       context: ./backend
+    environment:
+      NASA_API_KEY: ${NASA_API_KEY}
+      SPACE_APP_DB_PATH: /data/space_app.db
     ports:
       - "8000:8000"
+    volumes:
+      - backend-data:/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
@@ -33,3 +38,6 @@ services:
 networks:
   space:
     driver: bridge
+
+volumes:
+  backend-data:

@@ -25,5 +25,7 @@ class Planet(BaseModel):
     texture_url: str
     ring_texture_url: str | None = None
     has_rings: bool = False
+    moon_count: int = 0
+    featured_moons: list[str] = Field(default_factory=list)
     orbital_velocity_km_s: float
     description: str

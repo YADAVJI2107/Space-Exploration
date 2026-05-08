@@ -7,6 +7,7 @@ interface SimulationState {
   viewMode: ViewMode;
   selectedPlanet: string;
   followTarget: string | null;
+  selectedDestination: string;
   showOrbits: boolean;
   nBodyEnabled: boolean;
   gravityScale: number;
@@ -19,6 +20,7 @@ interface SimulationState {
   setViewMode: (viewMode: ViewMode) => void;
   selectPlanet: (planet: string) => void;
   setFollowTarget: (planet: string | null) => void;
+  setSelectedDestination: (destination: string) => void;
   setShowOrbits: (showOrbits: boolean) => void;
   setNBodyEnabled: (nBodyEnabled: boolean) => void;
   setGravityScale: (gravityScale: number) => void;
@@ -28,11 +30,12 @@ interface SimulationState {
 }
 
 export const useSimulationStore = create<SimulationState>((set) => ({
-  timeScale: 45,
+  timeScale: 8,
   isPaused: false,
-  viewMode: "system",
+  viewMode: "free",
   selectedPlanet: "Earth",
-  followTarget: "Earth",
+  followTarget: null,
+  selectedDestination: "local-group",
   showOrbits: true,
   nBodyEnabled: false,
   gravityScale: 1,
@@ -45,10 +48,21 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   setViewMode: (viewMode) =>
     set((state) => ({
       viewMode,
-      followTarget: viewMode === "free" ? null : state.followTarget ?? state.selectedPlanet
+      selectedDestination: viewMode === "planet" ? "solar-system" : state.selectedDestination,
+      followTarget:
+        viewMode === "free" || viewMode === "planet"
+          ? null
+          : state.followTarget ?? state.selectedPlanet
     })),
-  selectPlanet: (planet) => set({ selectedPlanet: planet, followTarget: planet }),
+  selectPlanet: (planet) =>
+    set({ selectedPlanet: planet, followTarget: planet, selectedDestination: "solar-system" }),
   setFollowTarget: (planet) => set({ followTarget: planet }),
+  setSelectedDestination: (selectedDestination) =>
+    set((state) => ({
+      selectedDestination,
+      followTarget: selectedDestination === "solar-system" ? state.selectedPlanet : null,
+      viewMode: selectedDestination === "solar-system" ? "system" : "free"
+    })),
   setShowOrbits: (showOrbits) => set({ showOrbits }),
   setNBodyEnabled: (nBodyEnabled) => set({ nBodyEnabled }),
   setGravityScale: (gravityScale) => set({ gravityScale }),

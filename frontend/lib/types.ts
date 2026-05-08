@@ -1,4 +1,19 @@
-export type ViewMode = "system" | "free";
+export type ViewMode = "system" | "free" | "planet";
+export type FocusTargetKind = "overview" | "solar-system" | "star-system" | "galaxy";
+
+export interface ExplorationDestination {
+  id: string;
+  name: string;
+  kind: FocusTargetKind;
+  description: string;
+  position: [number, number, number];
+  accentColor: string;
+  scale: number;
+  orbitingBodies: number;
+  parentId?: string | null;
+  focusDistance?: number;
+  label?: string;
+}
 
 export interface Planet {
   name: string;
@@ -21,6 +36,8 @@ export interface Planet {
   textureUrl: string;
   ringTextureUrl?: string | null;
   hasRings: boolean;
+  moonCount: number;
+  featuredMoons: string[];
   orbitalVelocityKmS: number;
   description: string;
 }
@@ -41,4 +58,36 @@ export interface PlanetPosition {
   x: number;
   y: number;
   z: number;
+}
+
+export interface SessionState {
+  id: string;
+  name: string;
+  selectedPlanet: string;
+  viewMode: ViewMode;
+  timeScale: number;
+  paused: boolean;
+  backendDriven: boolean;
+  nBodyEnabled: boolean;
+  gravityScale: number;
+  showOrbits: boolean;
+  favorites: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrajectoryPoint {
+  at: string;
+  x: number;
+  y: number;
+  z: number;
+  vx?: number | null;
+  vy?: number | null;
+  vz?: number | null;
+}
+
+export interface PlanetTrajectory {
+  name: string;
+  source: string;
+  points: TrajectoryPoint[];
 }

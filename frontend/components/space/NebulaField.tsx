@@ -1,9 +1,11 @@
 "use client";
 
+import { Billboard, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { seededRandom } from "@/lib/seeded-random";
+import { tuneBasicMaterialTexture } from "@/lib/three-texture";
 
 interface NebulaFieldProps {
   cloudCount?: number;
@@ -18,12 +20,14 @@ export function NebulaField({
 }: NebulaFieldProps) {
   const particleRef = useRef<THREE.Points>(null);
   const cloudRef = useRef<THREE.Group>(null);
+  const spriteTexture = useTexture("/sprites/soft-disc.svg") as THREE.Texture;
+  const nebulaTexture = useTexture("/nasa/pillars-of-creation.png") as THREE.Texture;
 
   const { positions, colors } = useMemo(() => {
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
-    const baseColor = new THREE.Color("#7dd3fc");
-    const accentColor = new THREE.Color("#c084fc");
+    const baseColor = new THREE.Color("#84bfe5");
+    const accentColor = new THREE.Color("#f3c88f");
 
     for (let index = 0; index < particleCount; index += 1) {
       const seed = index + particleCount * 11 + radius * 5;
@@ -60,8 +64,8 @@ export function NebulaField({
             Math.sin(angle) * dist
           ),
           scale: 12 + seededRandom(seed + 2) * 16,
-          color: index % 2 === 0 ? "#7c3aed" : "#0ea5e9",
-          opacity: 0.08 + seededRandom(seed + 3) * 0.08
+          color: index % 2 === 0 ? "#5ea8d7" : "#f0bb7b",
+          opacity: 0.04 + seededRandom(seed + 3) * 0.04
         };
       }),
     [cloudCount, radius]
@@ -69,10 +73,10 @@ export function NebulaField({
 
   useFrame((_, delta) => {
     if (particleRef.current) {
-      particleRef.current.rotation.y -= delta * 0.01;
+      particleRef.current.rotation.y -= delta * 0.003;
     }
     if (cloudRef.current) {
-      cloudRef.current.rotation.y += delta * 0.006;
+      cloudRef.current.rotation.y += delta * 0.002;
     }
   });
 
@@ -84,11 +88,14 @@ export function NebulaField({
           <bufferAttribute attach="attributes-color" args={[colors, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.9}
+          size={0.72}
           sizeAttenuation
+          map={spriteTexture}
+          alphaMap={spriteTexture}
+          alphaTest={0.08}
           vertexColors
           transparent
-          opacity={0.4}
+          opacity={0.24}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
@@ -96,16 +103,20 @@ export function NebulaField({
 
       <group ref={cloudRef}>
         {clouds.map((cloud) => (
-          <mesh key={cloud.id} position={cloud.position} scale={cloud.scale}>
-            <sphereGeometry args={[1, 32, 32]} />
-            <meshBasicMaterial
-              color={cloud.color}
-              transparent
-              opacity={cloud.opacity}
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
+          <Billboard key={cloud.id} position={cloud.position}>
+            <mesh scale={[cloud.scale * 1.35, cloud.scale, 1]}>
+              <planeGeometry args={[1, 1]} />
+              <meshBasicMaterial
+                map={nebulaTexture}
+                color={cloud.color}
+                transparent
+                opacity={cloud.opacity}
+                depthWrite={false}
+                blending={THREE.AdditiveBlending}
+                onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
+              />
+            </mesh>
+          </Billboard>
         ))}
       </group>
     </group>

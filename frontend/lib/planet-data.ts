@@ -1,9 +1,9 @@
 import type { Planet, SimulationConfig } from "@/lib/types";
 
 export const fallbackSimulationConfig: SimulationConfig = {
-  timeScale: 45,
+  timeScale: 8,
   gravitationalConstant: 6.6743e-11,
-  galacticSpeed: 0.16,
+  galacticSpeed: 0.08,
   gravityScale: 1,
   backendDriven: false,
   nBodyEnabled: false,
@@ -36,8 +36,10 @@ export const fallbackPlanets: Planet[] = [
     color: "#9f978d",
     textureUrl: "/textures/2k_mercury.jpg",
     hasRings: false,
+    moonCount: 0,
+    featuredMoons: [],
     orbitalVelocityKmS: 47.36,
-    description: "Small, iron-rich inner planet with the most eccentric orbit in this model."
+    description: "Mercury is the smallest planet and the closest world to the Sun. It has no atmosphere thick enough to soften impacts, so its surface is heavily cratered and scarred by long cliffs formed as the planet cooled and contracted. Its day is strangely long compared with its year, and its elliptical orbit makes its changing speed easy to notice in the simulation."
   },
   {
     name: "Venus",
@@ -59,8 +61,10 @@ export const fallbackPlanets: Planet[] = [
     color: "#d8b36b",
     textureUrl: "/textures/2k_venus_surface.jpg",
     hasRings: false,
+    moonCount: 0,
+    featuredMoons: [],
     orbitalVelocityKmS: 35.02,
-    description: "A slowly rotating, retrograde world with a nearly circular orbit."
+    description: "Venus is almost Earth-sized, but its dense carbon dioxide atmosphere traps heat so strongly that the surface is hotter than Mercury. It rotates backward compared with most planets and turns so slowly that a Venus day lasts longer than a Venus year. The visual surface texture represents the rocky terrain below the permanent cloud deck."
   },
   {
     name: "Earth",
@@ -82,8 +86,10 @@ export const fallbackPlanets: Planet[] = [
     color: "#5aa6d6",
     textureUrl: "/textures/2k_earth_daymap.jpg",
     hasRings: false,
+    moonCount: 1,
+    featuredMoons: ["Moon"],
     orbitalVelocityKmS: 29.78,
-    description: "The reference body: one astronomical unit from the Sun with a tilted spin axis."
+    description: "Earth is the reference planet for this simulation: one astronomical unit from the Sun, with liquid oceans, a protective atmosphere, and one large Moon that stabilizes its axial tilt. Its blue-white appearance comes from water, clouds, and reflected sunlight, while the day-night rhythm is driven by a nearly 24-hour rotation."
   },
   {
     name: "Mars",
@@ -105,8 +111,10 @@ export const fallbackPlanets: Planet[] = [
     color: "#d26a45",
     textureUrl: "/textures/2k_mars.jpg",
     hasRings: false,
+    moonCount: 2,
+    featuredMoons: ["Phobos", "Deimos"],
     orbitalVelocityKmS: 24.07,
-    description: "A dusty terrestrial planet whose eccentricity makes its speed changes easy to see."
+    description: "Mars is a cold desert world with iron-rich dust, giant volcanoes, deep canyons, polar ice caps, and two small moons. Its thin atmosphere cannot support liquid water on the surface for long today, but spacecraft data shows that rivers, lakes, and groundwater shaped parts of ancient Mars."
   },
   {
     name: "Jupiter",
@@ -128,8 +136,10 @@ export const fallbackPlanets: Planet[] = [
     color: "#d7b48a",
     textureUrl: "/textures/2k_jupiter.jpg",
     hasRings: false,
+    moonCount: 101,
+    featuredMoons: ["Io", "Europa", "Ganymede", "Callisto"],
     orbitalVelocityKmS: 13.07,
-    description: "The dominant giant planet, scaled down visually so the whole system remains navigable."
+    description: "Jupiter is the largest planet in the Solar System, massive enough to strongly shape asteroid and comet paths. Its banded atmosphere is driven by fast rotation and powerful jet streams, while the Great Red Spot is a long-lived storm larger than Earth. The four featured Galilean moons are shown as the most prominent members of a much larger moon system."
   },
   {
     name: "Saturn",
@@ -152,8 +162,10 @@ export const fallbackPlanets: Planet[] = [
     textureUrl: "/textures/2k_saturn.jpg",
     ringTextureUrl: "/textures/2k_saturn_ring_alpha.png",
     hasRings: true,
+    moonCount: 274,
+    featuredMoons: ["Titan", "Enceladus", "Rhea", "Iapetus", "Dione"],
     orbitalVelocityKmS: 9.68,
-    description: "A low-density gas giant with a ring plane aligned to its tilted equator."
+    description: "Saturn is a low-density gas giant wrapped in the Solar System's most dramatic ring system. The rings are mostly water-ice particles ranging from dust grains to boulder-sized chunks, separated into bands and gaps by orbital resonances with moons. Titan and Enceladus make Saturn especially important for astrobiology and ocean-world studies."
   },
   {
     name: "Uranus",
@@ -175,8 +187,10 @@ export const fallbackPlanets: Planet[] = [
     color: "#8fd5df",
     textureUrl: "/textures/2k_uranus.jpg",
     hasRings: false,
+    moonCount: 28,
+    featuredMoons: ["Miranda", "Ariel", "Umbriel", "Titania", "Oberon"],
     orbitalVelocityKmS: 6.8,
-    description: "An ice giant rolling around the Sun with an extreme axial tilt."
+    description: "Uranus is an ice giant with an extreme axial tilt, so it appears to roll around the Sun on its side. Its blue-green color comes mostly from methane absorbing red light, and its faint rings and moons orbit in a tilted system that reflects the planet's unusual orientation."
   },
   {
     name: "Neptune",
@@ -198,7 +212,9 @@ export const fallbackPlanets: Planet[] = [
     color: "#3f67df",
     textureUrl: "/textures/2k_neptune.jpg",
     hasRings: false,
+    moonCount: 16,
+    featuredMoons: ["Triton", "Proteus", "Nereid", "Hippocamp"],
     orbitalVelocityKmS: 5.43,
-    description: "The outer ice giant in this simulation, moving slowly through a slightly tilted orbit."
+    description: "Neptune is the outermost major planet, an ice giant with supersonic winds, storm systems, and a deep blue appearance shaped by methane and atmospheric haze. Triton, its largest moon, orbits backward and may be a captured Kuiper Belt object, making Neptune's moon system especially distinctive."
   }
 ];

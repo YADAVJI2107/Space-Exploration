@@ -4,10 +4,13 @@ import { Html, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { RefObject, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { orbitalPosition } from "@/lib/orbital";
+import { orbitalPosition, visibleRotationDaysPerSecond } from "@/lib/orbital";
 import { useSimulationStore } from "@/lib/store";
 import { tuneStandardMaterial } from "@/lib/three-texture";
 import type { Planet } from "@/lib/types";
+import { MoonSystem } from "@/components/space/MoonSystem";
+import { OrbitalInfrastructure } from "@/components/space/OrbitalInfrastructure";
+import { SaturnRingSystem } from "@/components/space/SaturnRingSystem";
 
 interface PlanetMeshProps {
   planet: Planet;
@@ -24,6 +27,7 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateR
   const haloRef = useRef<THREE.Mesh>(null);
   const texture = useTexture(planet.textureUrl) as THREE.Texture;
   const selectedPlanet = useSimulationStore((state) => state.selectedPlanet);
+  const selectPlanet = useSimulationStore((state) => state.selectPlanet);
   const isSelected = selectedPlanet === planet.name;
 
   useEffect(() => {
@@ -54,7 +58,8 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateR
 
     const { isPaused, timeScale } = useSimulationStore.getState();
     if (!isPaused && bodyRef.current) {
-      bodyRef.current.rotation.y += delta * timeScale * planet.rotationSpeed * Math.PI * 2;
+      const visualDaysPerSecond = visibleRotationDaysPerSecond(timeScale);
+      bodyRef.current.rotation.y += delta * visualDaysPerSecond * planet.rotationSpeed * Math.PI * 2;
     }
 
     if (haloRef.current) {
@@ -67,22 +72,40 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateR
   return (
     <group ref={rootRef}>
       <group rotation={[0, 0, THREE.MathUtils.degToRad(planet.axialTilt)]}>
-        <mesh ref={bodyRef} castShadow receiveShadow>
+        <mesh
+          ref={bodyRef}
+          castShadow
+          receiveShadow
+          onClick={(e) => {
+            e.stopPropagation();
+            selectPlanet(planet.name);
+          }}
+          onPointerEnter={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = "pointer";
+          }}
+          onPointerLeave={(e) => {
+            e.stopPropagation();
+            document.body.style.cursor = "default";
+          }}
+        >
           <sphereGeometry args={[planet.displayRadius, 64, 64]} />
           <meshStandardMaterial
             map={texture}
             color={planet.color}
-            roughness={0.82}
-            metalness={0.03}
-            emissive={planet.name === "Earth" ? "#061733" : "#000000"}
-            emissiveIntensity={planet.name === "Earth" ? 0.05 : 0}
+            roughness={planet.name === "Earth" ? 0.72 : 0.86}
+            metalness={0.02}
+            emissive={planet.name === "Earth" ? "#0a2748" : planet.name === "Neptune" ? "#102a52" : "#000000"}
+            emissiveIntensity={planet.name === "Earth" ? 0.08 : planet.name === "Neptune" ? 0.05 : 0}
             onUpdate={tuneStandardMaterial}
           />
         </mesh>
 
         {planet.hasRings && planet.ringTextureUrl ? (
-          <SaturnRings radius={planet.displayRadius} textureUrl={planet.ringTextureUrl} />
+          <SaturnRingSystem radius={planet.displayRadius} textureUrl={planet.ringTextureUrl} />
         ) : null}
+
+        <PlanetAtmosphere planet={planet} />
       </group>
 
       <mesh ref={haloRef} visible={isSelected}>
@@ -102,24 +125,39 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateR
           </div>
         </Html>
       ) : null}
+
+      <MoonSystem planet={planet} getElapsedDays={getElapsedDays} />
+      {isSelected ? <OrbitalInfrastructure planet={planet} /> : null}
     </group>
   );
 }
 
-function SaturnRings({ radius, textureUrl }: { radius: number; textureUrl: string }) {
-  const texture = useTexture(textureUrl) as THREE.Texture;
+function PlanetAtmosphere({ planet }: { planet: Planet }) {
+  const atmosphereColor =
+    planet.name === "Earth"
+      ? "#6fd7ff"
+      : planet.name === "Venus"
+        ? "#ffd39c"
+        : planet.name === "Neptune"
+          ? "#78a9ff"
+          : planet.name === "Uranus"
+            ? "#9be7ef"
+            : null;
+
+  if (!atmosphereColor) {
+    return null;
+  }
 
   return (
-    <mesh rotation={[Math.PI / 2, 0, 0]} receiveShadow>
-      <ringGeometry args={[radius * 1.35, radius * 2.38, 192]} />
-      <meshStandardMaterial
-        map={texture}
-        color="#f1dca8"
+    <mesh scale={1.05}>
+      <sphereGeometry args={[planet.displayRadius, 48, 48]} />
+      <meshBasicMaterial
+        color={atmosphereColor}
         transparent
-        opacity={0.92}
-        side={THREE.DoubleSide}
-        roughness={0.92}
-        onUpdate={tuneStandardMaterial}
+        opacity={0.08}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        side={THREE.BackSide}
       />
     </mesh>
   );

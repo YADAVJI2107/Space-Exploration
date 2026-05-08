@@ -15,7 +15,7 @@ export function Sun() {
   useFrame((_, delta) => {
     const { isPaused, timeScale } = useSimulationStore.getState();
     if (!isPaused && sunRef.current) {
-      sunRef.current.rotation.y += delta * 0.013 * (timeScale / 45);
+      sunRef.current.rotation.y += delta * 0.008 * Math.pow(Math.max(timeScale, 0.5) / 8, 0.3);
     }
 
     if (glowRef.current) {
@@ -28,24 +28,24 @@ export function Sun() {
     <group>
       <pointLight
         castShadow
-        intensity={550}
-        distance={180}
-        decay={1.7}
+        intensity={440}
+        distance={210}
+        decay={1.55}
         color="#fff2c7"
         shadow-mapSize={[2048, 2048]}
       />
       <mesh ref={glowRef} scale={1.5}>
         <sphereGeometry args={[3.2, 64, 64]} />
-        <meshBasicMaterial color="#f8b84f" transparent opacity={0.16} blending={THREE.AdditiveBlending} />
+        <meshBasicMaterial color="#f7c067" transparent opacity={0.12} blending={THREE.AdditiveBlending} />
       </mesh>
       <mesh ref={sunRef}>
         <sphereGeometry args={[2.45, 96, 96]} />
         <meshStandardMaterial
           map={texture}
           color="#fff0bf"
-          emissive="#ffb13d"
-          emissiveIntensity={2.8}
-          roughness={0.65}
+          emissive="#ffb761"
+          emissiveIntensity={2.1}
+          roughness={0.72}
           toneMapped={false}
           onUpdate={tuneStandardMaterial}
         />

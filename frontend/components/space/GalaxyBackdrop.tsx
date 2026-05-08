@@ -1,9 +1,11 @@
 "use client";
 
+import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { seededRandom } from "@/lib/seeded-random";
+import { tuneBasicMaterialTexture } from "@/lib/three-texture";
 
 interface GalaxyBackdropProps {
   starCount?: number;
@@ -19,13 +21,15 @@ export function GalaxyBackdrop({
   thickness = 18
 }: GalaxyBackdropProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const coreRef = useRef<THREE.Mesh>(null);
+  const galaxyPlaneRef = useRef<THREE.Mesh>(null);
+  const spriteTexture = useTexture("/sprites/soft-disc.svg") as THREE.Texture;
+  const galaxyTexture = useTexture("/nasa/spiral-galaxy-ngc3147.jpg") as THREE.Texture;
 
   const { positions, colors } = useMemo(() => {
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
     const coreColor = new THREE.Color("#f8fafc");
-    const rimColor = new THREE.Color("#4f9fdc");
+    const rimColor = new THREE.Color("#7aa4c9");
 
     for (let index = 0; index < starCount; index += 1) {
       const seed = index + starCount * 7 + radius * 3;
@@ -55,39 +59,60 @@ export function GalaxyBackdrop({
 
   useFrame((_, delta) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.015;
+      pointsRef.current.rotation.y += delta * 0.004;
     }
-    if (coreRef.current) {
-      coreRef.current.rotation.y -= delta * 0.01;
+    if (galaxyPlaneRef.current) {
+      galaxyPlaneRef.current.rotation.z += delta * 0.0016;
     }
   });
 
   return (
-    <group rotation={[0.12, 0, 0]}>
+    <group rotation={[0.08, 0, 0]}>
       <points ref={pointsRef} frustumCulled={false}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[positions, 3]} />
           <bufferAttribute attach="attributes-color" args={[colors, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.6}
+          size={0.48}
           sizeAttenuation
+          map={spriteTexture}
+          alphaMap={spriteTexture}
+          alphaTest={0.08}
           vertexColors
           transparent
-          opacity={0.82}
+          opacity={0.42}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </points>
-      <mesh ref={coreRef} scale={1.4}>
-        <sphereGeometry args={[22, 64, 64]} />
+
+      <mesh
+        ref={galaxyPlaneRef}
+        position={[0, -19, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[112, 112, 1]}
+      >
+        <planeGeometry args={[1, 1]} />
         <meshBasicMaterial
-          color="#a7d4ff"
+          map={galaxyTexture}
           transparent
-          opacity={0.08}
+          opacity={0.18}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
-          side={THREE.BackSide}
+          onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
+        />
+      </mesh>
+
+      <mesh position={[0, -18.4, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[30, 68, 192]} />
+        <meshBasicMaterial
+          color="#5f84be"
+          transparent
+          opacity={0.04}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
         />
       </mesh>
     </group>

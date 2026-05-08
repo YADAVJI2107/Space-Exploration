@@ -2,355 +2,175 @@
 
 ## Roadmap Strategy
 
-The best portfolio path is visible quality first, backed by architecture that prevents rework:
+The best portfolio path is visible quality first, backed by architecture that prevents rework. Each phase preserves the current working simulation and increments toward a real data-backed, production-friendly platform.
 
 1. Stabilize architecture and contracts.
 2. Improve visuals and interaction.
-3. Integrate real NASA/JPL data.
+3. Integrate real NASA/JPL data and caching.
 4. Separate physics, render, and sync loops.
 5. Add backend persistence, cache, and jobs.
-6. Add testing, performance budgets, and CI/CD.
+6. Add CI/CD, testing, and performance budgets.
 
-This roadmap intentionally avoids a full rewrite. Each phase preserves the current working simulation and upgrades one layer at a time.
+This roadmap is intended to let any agent continue from a clear phase boundary.
 
 ## Phase 1: Stabilize Architecture And Contracts
 
-### Analysis
+### Status: Completed
 
-The frontend and backend are already separated, but the frontend is the real authority for simulation behavior. The first contract mismatch around `gravityScale` has been fixed; the remaining immediate issue is preventing future drift as the platform grows.
+### Done
 
-### Problems Found
+- Backend/frontend config contract aligned, including `gravityScale`.
+- API fallback is surfaced in the UI rather than failing silently.
+- Simulation config now uses camelCase aliases for frontend compatibility.
+- Backend import validation is successful.
+- Local API and fallback behavior are documented.
 
-- `gravityScale` now round-trips through the backend config API.
-- API fallback is now visible in the control panel, but richer diagnostics remain to be added.
-- Simulation, rendering, and visual effects are coordinated from `SolarSystemScene`.
-- Tests exist on the frontend but were not runnable in the current local environment.
+### Remaining
 
-### Proposed Architecture
+- Add wider API status diagnostics beyond the current `Fallback` indicator.
+- Add explicit contract tests for schema versioning and fallback behavior.
+- Clarify backend-synced vs frontend-only settings in the store.
+- Harden error recovery for backend outages.
 
-- Define whether each setting is backend-synced or frontend-only.
-- Add a small API status model to the frontend.
-- Start extracting simulation mode selection behind a simulation adapter.
-- Keep existing visual behavior unchanged.
+### Key Files
 
-### File-by-file Changes
-
-- `backend/app/schemas/simulation.py`: add `gravity_scale` if it should be persisted by backend.
-- `frontend/lib/types.ts`: keep config aligned with backend OpenAPI contract.
-- `frontend/lib/api.ts`: return data plus status/error metadata instead of only fallback values.
-- `frontend/hooks/useSpaceData.ts`: expose whether data came from API or fallback.
-- `frontend/components/space/SolarSystemScene.tsx`: begin moving simulation stepping out of scene composition.
-
-### Implementation
-
-- Keep simulation config contract tests passing as new fields are added.
-- Add API contract tests for config payloads.
-- Expand the minimal data status indicator into clearer diagnostics and recovery guidance.
-- Document current simulation units and scale assumptions.
-
-### Tests
-
-- Frontend Vitest for API fallback/status behavior.
-- Backend Pytest for `/simulation/config` and `/simulation/update`.
-- Contract tests proving camelCase simulation config fields round-trip.
-
-### Performance Considerations
-
-This phase should not change rendering cost.
-
-### Future Extensibility Notes
-
-Clear contracts make NASA data, sessions, and WebSocket simulation streaming much safer to add later.
+- `backend/app/schemas/simulation.py`
+- `frontend/lib/types.ts`
+- `frontend/lib/api.ts`
+- `frontend/hooks/useSpaceData.ts`
+- `frontend/components/space/SolarSystemScene.tsx`
 
 ## Phase 2: Visual And Interaction Upgrade
 
-### Analysis
+### Status: Completed
 
-The current app is visually appealing but still uses basic materials and simple UI interactions. The fastest portfolio impact will come from cinematic rendering and direct exploration controls.
+### Done
 
-### Problems Found
+- Added clickable planets with hover and selection handling.
+- Added a planet info panel for selected bodies.
+- Added cinematic camera transitions and smoother follow behavior.
+- Added postprocessing effects with bloom and vignette.
+- Added backend NASA resource endpoints and metadata routes.
+- Updated frontend dependencies for postprocessing.
 
-- No postprocessing pipeline.
-- No atmosphere/cloud shader stack.
-- No clickable planets.
-- Camera transitions are functional but not yet cinematic.
-- Visual layers are fixed-cost.
+### Remaining
 
-### Proposed Architecture
+- Add in-app quality controls and performance profiles.
+- Add atmosphere/cloud shader layers for Earth and gas giants.
+- Add better visual feedback for selected mode and simulation state.
+- Add adaptive quality settings for lower-end devices.
 
-- Add a rendering quality profile in state.
-- Add object picking/selection at the planet mesh level.
-- Add a postprocessing layer that can be disabled on lower quality.
-- Add visual upgrades one planet/effect at a time.
+### Key Files
 
-### File-by-file Changes
+- `frontend/components/space/PlanetMesh.tsx`
+- `frontend/components/space/SolarSystemScene.tsx`
+- `frontend/components/space/PlanetInfoPanel.tsx`
+- `frontend/components/space/CameraRig.tsx`
+- `frontend/components/space/PostprocessingEffects.tsx`
+- `backend/app/services/nasa_service.py`
+- `backend/app/routers/nasa.py`
 
-- `frontend/components/space/PlanetMesh.tsx`: add click/hover selection behavior.
-- `frontend/components/space/SolarSystemScene.tsx`: add postprocessing and quality-gated effect composition.
-- `frontend/components/ui/ControlPanel.tsx`: add compact quality/visual controls if needed.
-- New shader/effect modules under `frontend/components/space` or `frontend/lib/rendering`.
+## Phase 3: Real NASA/JPL Data Integration & Backend Persistence
 
-### Implementation
+### Status: Next
 
-- Add planet click selection and hover affordance.
-- Add smoother camera focus transitions.
-- Add bloom for sun/emissive highlights.
-- Add Earth atmosphere/cloud layer as the first high-quality planet upgrade.
-- Add adaptive quality defaults for particle-heavy layers.
+### Mission
 
-### Tests
+Move beyond static data and metadata by integrating real NASA/JPL ephemeris and persistence.
 
-- Control panel and store tests for quality toggles.
-- Playwright smoke test to verify canvas renders and planet selection updates UI.
+### Work to implement
 
-### Performance Considerations
+- Add JPL Horizons or equivalent NASA/JPL ephemeris integration.
+- Add persistent storage for planets and user sessions.
+- Add caching for external API responses.
+- Add user/session favorites support.
+- Add structured backend logging and request metadata.
 
-- Keep bloom and atmosphere optional.
-- Measure frame time before increasing particle counts.
-- Avoid heavy shader work on all planets at once.
+### Candidate Files
 
-### Future Extensibility Notes
+- `backend/app/services/jpl_service.py`
+- `backend/app/services/cache_service.py`
+- `backend/app/models/session.py`
+- `backend/app/routers/sessions.py`
+- `backend/app/db/models.py`
+- `frontend/hooks/useSession.ts`
+- `frontend/components/ui/SessionPanel.tsx`
 
-The same selection and info-panel flow will support moons, spacecraft, asteroids, and exoplanets.
+## Phase 4: Simulation Engine Separation & Backend Authority
 
-## Phase 3: Real Astronomical Data Integration
+### Status: Next
 
-### Analysis
+### Mission
 
-The current data is static. Real NASA/JPL data will make the platform feel grounded and credible, but it needs backend caching to avoid slow, rate-limited frontend calls.
+Separate the render loop from the physics loop and make backend trajectories the authoritative source of truth.
 
-### Problems Found
+### Work to implement
 
-- No external data source integration.
-- No cache or persistence.
-- No source attribution in UI.
-- No normalized schema for rich celestial metadata.
+- Add backend trajectory generation and caching endpoint.
+- Add frontend trajectory consumer and render adapter.
+- Keep frontend N-body as a fallback demo path.
+- Add optional WebSocket sync for live collaboration.
+- Add explicit timeline/date controls.
 
-### Proposed Architecture
+### Candidate Files
 
-- Backend owns external data integration.
-- Add normalized celestial metadata APIs.
-- Cache external responses.
-- Frontend renders source-aware metadata panels.
+- `backend/app/routers/trajectories.py`
+- `backend/app/services/trajectory_service.py`
+- `frontend/hooks/useTrajectories.ts`
+- `frontend/lib/render-adapter.ts`
 
-### File-by-file Changes
+## Phase 5: CI/CD, Testing, Performance Budgets
 
-- Backend: add data-provider service modules for NASA/JPL sources.
-- Backend: add normalized schemas for metadata, imagery, and source attribution.
-- Frontend: add metadata panels and loading/error states.
-- Frontend: extend `Planet` or introduce separate `CelestialMetadata` types.
+### Status: Future
 
-### Implementation
+### Mission
 
-- Start with NASA APOD and NASA Image and Video Library for visible impact.
-- Add JPL Horizons or cached ephemeris reference data after schema normalization.
-- Add EPIC Earth imagery as an optional Earth detail panel feature.
-- Add source attribution and timestamps in UI.
+Add reliability and validation so the project can evolve safely and be deployed with confidence.
 
-### Tests
+### Work to implement
 
-- Backend tests with mocked NASA/JPL responses.
-- Cache hit/miss tests.
-- Frontend tests for loading, fallback, and source display.
+- Add GitHub Actions or equivalent CI pipeline.
+- Add lint/build/test checks for frontend and backend.
+- Add Playwright E2E tests for critical flows.
+- Add performance budgets for bundle size and API latency.
+- Add monitoring and observability instrumentation.
 
-### Performance Considerations
+### Candidate Files
 
-- Never block first render on external data.
-- Cache backend responses.
-- Lazy-load rich metadata panels.
+- `.github/workflows/ci.yml`
+- `frontend/vitest.config.ts`
+- `frontend/playwright.config.ts`
+- `backend/pytest.ini`
+- `backend/requirements-dev.txt`
 
-### Future Extensibility Notes
+## Current Priorities
 
-The same provider pattern can support Exoplanet Archive, OpenSpace datasets, and NASA SVS references later.
+**Short term:**
 
-## Phase 4: Simulation Engine Separation
+1. Validate the Phase 2 build and deployment.
+2. Confirm frontend npm/vitest behavior.
+3. Add a small E2E smoke test for planet selection.
 
-### Analysis
+**Medium term:**
 
-The current simulation runs inside the render loop. This is acceptable for an interactive demo but not for deterministic replay, historical alignment playback, or backend-authoritative sessions.
+1. Start Phase 3 with NASA/JPL ephemeris.
+2. Add persistent sessions and favorites.
+3. Add caching for external API responses.
 
-### Problems Found
+**Long term:**
 
-- Frame-dependent physics.
-- No fixed timestep.
-- No simulation history buffer.
-- No shared interface for orbital vs N-body modes.
+1. Add backend trajectory precomputation.
+2. Add CI/CD and automated tests.
+3. Add performance budgeting and observability.
 
-### Proposed Architecture
+## Agent Continuation Notes
 
-- Introduce a simulation engine interface.
-- Use a fixed timestep accumulator.
-- Render interpolated transforms.
-- Keep backend sync optional and separate.
+A new agent can continue from Phase 3 with a single prompt by following these steps:
 
-### File-by-file Changes
+1. Preserve current Phase 2 UI and backend behavior.
+2. Implement NASA/JPL ephemeris or real astronomical data sources.
+3. Add persistence and user/session support.
+4. Add backend trajectory or simulation authority.
+5. Add CI/CD and tests after Phase 3 and Phase 4 are stable.
 
-- `frontend/lib/orbital.ts`: wrap current orbital logic as one engine mode.
-- `frontend/lib/nbody.ts`: wrap current N-body logic as another engine mode.
-- New `frontend/lib/simulation-engine.ts`: engine interface and stepping coordinator.
-- `SolarSystemScene`: consume transforms instead of owning physics logic directly.
-
-### Implementation
-
-- Add deterministic timestep stepping.
-- Add transform snapshots for interpolation.
-- Add velocity and acceleration vector data.
-- Add tests for timestep determinism.
-
-### Tests
-
-- Unit tests for fixed timestep accumulator.
-- Simulation correctness tests for orbital continuity.
-- N-body energy drift sanity checks within documented tolerance.
-
-### Performance Considerations
-
-- Keep simulation object allocations low.
-- Reuse vectors/buffers.
-- Consider Web Worker physics after deterministic engine exists.
-
-### Future Extensibility Notes
-
-This structure enables rewind, future simulation, collision prediction, spacecraft insertion, and backend-authoritative sessions.
-
-## Phase 5: Backend Platform Foundation
-
-### Analysis
-
-The backend needs to evolve from an in-memory service into a data and session platform, but this should happen after contracts and data needs are clearer.
-
-### Problems Found
-
-- No database.
-- No cache.
-- No background jobs.
-- No sessions or saved worlds.
-- No observability.
-
-### Proposed Architecture
-
-- PostgreSQL for durable entities.
-- Redis for cache and rate-limiting support.
-- Background worker for NASA/JPL refresh jobs.
-- WebSocket endpoint for optional simulation/session streaming.
-- API versioning under `/api/v1`.
-
-### File-by-file Changes
-
-- Add backend settings module for environment-driven config.
-- Add database models/migrations when durable entities are introduced.
-- Add cache service wrapper.
-- Add versioned routers.
-- Extend Compose with Postgres and Redis only when used.
-
-### Implementation
-
-- Add structured settings and environment examples first.
-- Add Redis cache for external data.
-- Add Postgres for saved worlds/profiles after UI needs them.
-- Add WebSockets after frontend has a clean simulation sync boundary.
-
-### Tests
-
-- Pytest API tests.
-- Integration tests for cache/provider behavior.
-- WebSocket tests once streaming exists.
-
-### Performance Considerations
-
-- Cache slow external API calls.
-- Keep simulation streaming payloads compact.
-- Avoid database writes from high-frequency simulation loops.
-
-### Future Extensibility Notes
-
-This prepares the project for user accounts, saved missions, collaborative sessions, and analytics without forcing those features too early.
-
-## Phase 6: Testing, Performance, And CI/CD
-
-### Analysis
-
-The project needs automated checks before major graphics, physics, and backend expansion.
-
-### Problems Found
-
-- Frontend tools were unavailable locally during audit.
-- Backend has no tests.
-- No e2e tests.
-- No CI pipeline.
-- No performance budgets.
-
-### Proposed Architecture
-
-- Vitest for frontend unit/component tests.
-- Pytest for backend tests.
-- Playwright for smoke/e2e and later visual regression.
-- CI pipeline for lint, typecheck, tests, and builds.
-- Lightweight performance benchmark for scene load and frame stability.
-
-### File-by-file Changes
-
-- Add backend test files under `backend/tests`.
-- Add CI workflow under `.github/workflows`.
-- Add documented setup commands to `README.md`.
-- Add Playwright smoke tests under a frontend e2e folder.
-
-### Implementation
-
-- Make dependency install reproducible.
-- Add backend smoke tests.
-- Add frontend typecheck script if missing.
-- Add CI for frontend lint/test/build and backend tests.
-- Add Playwright canvas smoke test.
-
-### Tests
-
-- Unit, component, API, contract, e2e, and simulation correctness tests.
-- Performance checks should start as reporting, then become budgets after baseline is stable.
-
-### Performance Considerations
-
-- Track FPS or frame time for representative scenes.
-- Add adaptive quality before pushing advanced shaders to all devices.
-
-### Future Extensibility Notes
-
-CI and benchmarks will protect the project as NASA data, shaders, workers, and backend services are added.
-
-## Deployment Path
-
-### Near Term
-
-- Keep Docker Compose for local full-stack validation.
-- Support Vercel frontend plus hosted FastAPI backend if desired.
-- Add `.env.example` files and production-safe CORS settings.
-
-### Mid Term
-
-- Add Railway/Fly.io deployment path for backend.
-- Add managed Postgres/Redis when data integration needs them.
-- Use CDN-friendly texture and image asset strategy.
-
-### Later
-
-- Add HTTPS/reverse proxy production config.
-- Add observability dashboards.
-- Add release checklist and migration process.
-
-## Recommended Next Implementation Order
-
-1. Expand backend/frontend tests around API status and config contracts.
-2. Add clickable planets and smoother camera focus.
-3. Add bloom/atmosphere as optional quality-gated effects.
-4. Add NASA image/APOD metadata through cached backend providers.
-5. Extract fixed timestep simulation engine.
-6. Add Playwright smoke tests and CI.
-7. Add persistence only when saved worlds/profiles are ready.
-
-## Non-goals For The Next Pass
-
-- Do not rewrite the whole app.
-- Do not add authentication before user-owned data exists.
-- Do not add PostgreSQL/Redis before there is a feature using them.
-- Do not claim scientific accuracy until validation against trusted ephemeris data exists.
-- Do not add expensive graphics effects without quality controls.
+Each phase is documented with "Done" and "Next" sections to make continuation seamless.
