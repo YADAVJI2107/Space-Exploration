@@ -4,11 +4,16 @@ export const fallbackSimulationConfig: SimulationConfig = {
   timeScale: 45,
   gravitationalConstant: 6.6743e-11,
   galacticSpeed: 0.16,
+  gravityScale: 1,
   backendDriven: false,
   nBodyEnabled: false,
   showOrbits: true,
   paused: false
 };
+
+export function mergeSimulationConfig(config: Partial<SimulationConfig> | undefined) {
+  return { ...fallbackSimulationConfig, ...config };
+}
 
 export const fallbackPlanets: Planet[] = [
   {

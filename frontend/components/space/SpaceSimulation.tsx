@@ -8,7 +8,7 @@ import { SolarSystemScene } from "@/components/space/SolarSystemScene";
 import { useSpaceData } from "@/hooks/useSpaceData";
 
 export default function SpaceSimulation() {
-  const { planets, config, isLoading } = useSpaceData();
+  const { planets, config, isLoading, dataSource, dataError } = useSpaceData();
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-[#02030a]">
@@ -34,7 +34,12 @@ export default function SpaceSimulation() {
         </Suspense>
       </Canvas>
 
-      <ControlPanel planets={planets} isLoading={isLoading} />
+      <ControlPanel
+        planets={planets}
+        isLoading={isLoading}
+        dataSource={dataSource}
+        dataError={dataError}
+      />
     </main>
   );
 }

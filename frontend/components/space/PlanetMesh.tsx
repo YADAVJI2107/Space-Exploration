@@ -2,7 +2,7 @@
 
 import { Html, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { orbitalPosition } from "@/lib/orbital";
 import { useSimulationStore } from "@/lib/store";
@@ -13,11 +13,12 @@ interface PlanetMeshProps {
   planet: Planet;
   getElapsedDays: () => number;
   registerPlanet: (name: string, object: THREE.Object3D | null) => void;
+  nBodyStateRef?: RefObject<{ positions: Record<string, THREE.Vector3> } | null>;
 }
 
 const scratchPosition = new THREE.Vector3();
 
-export function PlanetMesh({ planet, getElapsedDays, registerPlanet }: PlanetMeshProps) {
+export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateRef }: PlanetMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const bodyRef = useRef<THREE.Mesh>(null);
   const haloRef = useRef<THREE.Mesh>(null);
@@ -43,7 +44,13 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet }: PlanetMes
       return;
     }
 
-    root.position.copy(orbitalPosition(planet, getElapsedDays(), scratchPosition));
+    const nBodyEnabled = useSimulationStore.getState().nBodyEnabled;
+    const nBodyPosition = nBodyEnabled ? nBodyStateRef?.current?.positions[planet.name] : null;
+    if (nBodyPosition) {
+      root.position.copy(nBodyPosition);
+    } else {
+      root.position.copy(orbitalPosition(planet, getElapsedDays(), scratchPosition));
+    }
 
     const { isPaused, timeScale } = useSimulationStore.getState();
     if (!isPaused && bodyRef.current) {

@@ -1,0 +1,95 @@
+"use client";
+
+import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
+import { seededRandom } from "@/lib/seeded-random";
+
+interface GalaxyBackdropProps {
+  starCount?: number;
+  radius?: number;
+  arms?: number;
+  thickness?: number;
+}
+
+export function GalaxyBackdrop({
+  starCount = 5200,
+  radius = 180,
+  arms = 4,
+  thickness = 18
+}: GalaxyBackdropProps) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const coreRef = useRef<THREE.Mesh>(null);
+
+  const { positions, colors } = useMemo(() => {
+    const positions = new Float32Array(starCount * 3);
+    const colors = new Float32Array(starCount * 3);
+    const coreColor = new THREE.Color("#f8fafc");
+    const rimColor = new THREE.Color("#4f9fdc");
+
+    for (let index = 0; index < starCount; index += 1) {
+      const seed = index + starCount * 7 + radius * 3;
+      const arm = index % arms;
+      const distance = Math.pow(seededRandom(seed), 0.55) * radius;
+      const armOffset = (arm * (Math.PI * 2)) / arms;
+      const swirl = distance * 0.045 + (seededRandom(seed + 1) - 0.5) * 0.4;
+      const angle = armOffset + swirl;
+      const height = (seededRandom(seed + 2) - 0.5) * thickness * (1 - distance / radius);
+
+      const x = Math.cos(angle) * distance;
+      const z = Math.sin(angle) * distance;
+      const y = height;
+
+      positions[index * 3] = x;
+      positions[index * 3 + 1] = y;
+      positions[index * 3 + 2] = z;
+
+      const color = coreColor.clone().lerp(rimColor, distance / radius);
+      colors[index * 3] = color.r;
+      colors[index * 3 + 1] = color.g;
+      colors[index * 3 + 2] = color.b;
+    }
+
+    return { positions, colors };
+  }, [arms, radius, starCount, thickness]);
+
+  useFrame((_, delta) => {
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y += delta * 0.015;
+    }
+    if (coreRef.current) {
+      coreRef.current.rotation.y -= delta * 0.01;
+    }
+  });
+
+  return (
+    <group rotation={[0.12, 0, 0]}>
+      <points ref={pointsRef} frustumCulled={false}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+          <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.6}
+          sizeAttenuation
+          vertexColors
+          transparent
+          opacity={0.82}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <mesh ref={coreRef} scale={1.4}>
+        <sphereGeometry args={[22, 64, 64]} />
+        <meshBasicMaterial
+          color="#a7d4ff"
+          transparent
+          opacity={0.08}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          side={THREE.BackSide}
+        />
+      </mesh>
+    </group>
+  );
+}

@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useSimulationStore } from "@/lib/store";
+import { seededRandom } from "@/lib/seeded-random";
 
 interface InstancedStarsProps {
   count: number;
@@ -16,11 +17,6 @@ interface InstancedStarsProps {
 
 const matrix = new THREE.Matrix4();
 const color = new THREE.Color();
-
-function seededRandom(seed: number) {
-  const value = Math.sin(seed * 12.9898) * 43758.5453;
-  return value - Math.floor(value);
-}
 
 export function InstancedStars({ count, radius, depth, parallax, size, warm }: InstancedStarsProps) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
