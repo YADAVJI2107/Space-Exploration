@@ -3,7 +3,19 @@ import type { Planet, SimulationConfig } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api";
 
-async function getJson<T>(path: string, fallback: T): Promise<T> {
+export type ApiDataSource = "api" | "fallback";
+
+export interface ApiResult<T> {
+  data: T;
+  source: ApiDataSource;
+  error?: string;
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unknown API error";
+}
+
+async function getJson<T>(path: string, fallback: T): Promise<ApiResult<T>> {
   try {
     const response = await fetch(`${API_BASE}${path}`, {
       headers: { Accept: "application/json" },
@@ -14,9 +26,9 @@ async function getJson<T>(path: string, fallback: T): Promise<T> {
       throw new Error(`Request failed with ${response.status}`);
     }
 
-    return (await response.json()) as T;
-  } catch {
-    return fallback;
+    return { data: (await response.json()) as T, source: "api" };
+  } catch (error) {
+    return { data: fallback, source: "fallback", error: errorMessage(error) };
   }
 }
 

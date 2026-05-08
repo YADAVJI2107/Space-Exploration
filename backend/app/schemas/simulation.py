@@ -8,6 +8,7 @@ class SimulationConfig(BaseModel):
     time_scale: float = Field(default=45, ge=0.1, le=1000)
     gravitational_constant: float = 6.67430e-11
     galactic_speed: float = Field(default=0.16, ge=0, le=5)
+    gravity_scale: float = Field(default=1, ge=0.1, le=10)
     backend_driven: bool = False
     n_body_enabled: bool = False
     show_orbits: bool = True
@@ -19,6 +20,7 @@ class SimulationUpdate(BaseModel):
 
     time_scale: float | None = Field(default=None, ge=0.1, le=1000)
     galactic_speed: float | None = Field(default=None, ge=0, le=5)
+    gravity_scale: float | None = Field(default=None, ge=0.1, le=10)
     backend_driven: bool | None = None
     n_body_enabled: bool | None = None
     show_orbits: bool | None = None

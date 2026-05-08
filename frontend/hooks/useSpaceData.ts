@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ApiDataSource } from "@/lib/api";
 import { fetchPlanets, fetchSimulationConfig } from "@/lib/api";
 import {
   fallbackPlanets,
@@ -13,6 +14,8 @@ import type { Planet, SimulationConfig } from "@/lib/types";
 export function useSpaceData() {
   const [planets, setPlanets] = useState<Planet[]>(fallbackPlanets);
   const [config, setConfig] = useState<SimulationConfig>(fallbackSimulationConfig);
+  const [dataSource, setDataSource] = useState<ApiDataSource>("fallback");
+  const [dataError, setDataError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const setTimeScale = useSimulationStore((state) => state.setTimeScale);
   const setPaused = useSimulationStore((state) => state.setPaused);
@@ -24,14 +27,17 @@ export function useSpaceData() {
     let isMounted = true;
 
     Promise.all([fetchPlanets(), fetchSimulationConfig()])
-      .then(([planetPayload, configPayload]) => {
+      .then(([planetResult, configResult]) => {
         if (!isMounted) {
           return;
         }
 
-        const mergedConfig = mergeSimulationConfig(configPayload);
-        setPlanets(planetPayload);
+        const mergedConfig = mergeSimulationConfig(configResult.data);
+        const usingFallback = planetResult.source === "fallback" || configResult.source === "fallback";
+        setPlanets(planetResult.data);
         setConfig(mergedConfig);
+        setDataSource(usingFallback ? "fallback" : "api");
+        setDataError([planetResult.error, configResult.error].filter(Boolean).join("; ") || null);
         setTimeScale(mergedConfig.timeScale);
         setPaused(mergedConfig.paused);
         setShowOrbits(mergedConfig.showOrbits);
@@ -49,5 +55,5 @@ export function useSpaceData() {
     };
   }, [setGravityScale, setNBodyEnabled, setPaused, setShowOrbits, setTimeScale]);
 
-  return { planets, config, isLoading };
+  return { planets, config, isLoading, dataSource, dataError };
 }

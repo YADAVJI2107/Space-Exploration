@@ -13,6 +13,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { updateSimulationConfig } from "@/lib/api";
+import type { ApiDataSource } from "@/lib/api";
 import { formatNumber } from "@/lib/orbital";
 import { useSimulationStore } from "@/lib/store";
 import type { Planet, ViewMode } from "@/lib/types";
@@ -20,9 +21,16 @@ import type { Planet, ViewMode } from "@/lib/types";
 interface ControlPanelProps {
   planets: Planet[];
   isLoading: boolean;
+  dataSource?: ApiDataSource;
+  dataError?: string | null;
 }
 
-export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
+export function ControlPanel({
+  planets,
+  isLoading,
+  dataSource = "api",
+  dataError = null
+}: ControlPanelProps) {
   const timeScale = useSimulationStore((state) => state.timeScale);
   const isPaused = useSimulationStore((state) => state.isPaused);
   const viewMode = useSimulationStore((state) => state.viewMode);
@@ -78,8 +86,15 @@ export function ControlPanel({ planets, isLoading }: ControlPanelProps) {
             <h1 className="text-lg font-semibold tracking-normal text-white">Space Exploration</h1>
             <p className="text-xs text-slate-300">Orbital telemetry</p>
           </div>
-          <div className="rounded-md border border-cyan-200/30 bg-cyan-200/10 px-2 py-1 text-xs font-medium text-cyan-100">
-            {isLoading ? "Syncing" : "Live"}
+          <div
+            className={`rounded-md border px-2 py-1 text-xs font-medium ${
+              dataSource === "fallback" && !isLoading
+                ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
+                : "border-cyan-200/30 bg-cyan-200/10 text-cyan-100"
+            }`}
+            title={dataError ?? undefined}
+          >
+            {isLoading ? "Syncing" : dataSource === "fallback" ? "Fallback" : "Live"}
           </div>
         </div>
 
