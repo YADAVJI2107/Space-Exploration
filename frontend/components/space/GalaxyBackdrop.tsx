@@ -1,6 +1,6 @@
 "use client";
 
-import { Billboard, useTexture } from "@react-three/drei";
+import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -62,12 +62,12 @@ export function GalaxyBackdrop({
       pointsRef.current.rotation.y += delta * 0.004;
     }
     if (galaxyPlaneRef.current) {
-      galaxyPlaneRef.current.rotation.z += delta * 0.002;
+      galaxyPlaneRef.current.rotation.z += delta * 0.0016;
     }
   });
 
   return (
-    <group rotation={[0.12, 0, 0]}>
+    <group rotation={[0.08, 0, 0]}>
       <points ref={pointsRef} frustumCulled={false}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[positions, 3]} />
@@ -81,25 +81,40 @@ export function GalaxyBackdrop({
           alphaTest={0.08}
           vertexColors
           transparent
-          opacity={0.55}
+          opacity={0.42}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </points>
 
-      <Billboard position={[0, 0, -125]} follow lockX={false} lockY={false} lockZ={false}>
-        <mesh ref={galaxyPlaneRef} scale={[110, 100, 1]}>
-          <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial
-            map={galaxyTexture}
-            transparent
-            opacity={0.24}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
-          />
-        </mesh>
-      </Billboard>
+      <mesh
+        ref={galaxyPlaneRef}
+        position={[0, -19, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={[112, 112, 1]}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          map={galaxyTexture}
+          transparent
+          opacity={0.18}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
+        />
+      </mesh>
+
+      <mesh position={[0, -18.4, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[30, 68, 192]} />
+        <meshBasicMaterial
+          color="#5f84be"
+          transparent
+          opacity={0.04}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
     </group>
   );
 }

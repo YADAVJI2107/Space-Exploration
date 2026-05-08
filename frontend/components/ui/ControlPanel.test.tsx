@@ -35,6 +35,8 @@ describe("ControlPanel", () => {
     fireEvent.click(pauseButton);
     expect(useSimulationStore.getState().isPaused).toBe(true);
 
+    fireEvent.click(screen.getByRole("button", { name: /settings/i }));
+
     const galaxyToggle = screen.getByLabelText(/galaxy backdrop/i);
     fireEvent.click(galaxyToggle);
     expect(useSimulationStore.getState().showGalaxy).toBe(false);

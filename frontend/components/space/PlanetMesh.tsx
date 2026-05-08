@@ -9,6 +9,8 @@ import { useSimulationStore } from "@/lib/store";
 import { tuneStandardMaterial } from "@/lib/three-texture";
 import type { Planet } from "@/lib/types";
 import { MoonSystem } from "@/components/space/MoonSystem";
+import { OrbitalInfrastructure } from "@/components/space/OrbitalInfrastructure";
+import { SaturnRingSystem } from "@/components/space/SaturnRingSystem";
 
 interface PlanetMeshProps {
   planet: Planet;
@@ -100,7 +102,7 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateR
         </mesh>
 
         {planet.hasRings && planet.ringTextureUrl ? (
-          <SaturnRings radius={planet.displayRadius} textureUrl={planet.ringTextureUrl} />
+          <SaturnRingSystem radius={planet.displayRadius} textureUrl={planet.ringTextureUrl} />
         ) : null}
 
         <PlanetAtmosphere planet={planet} />
@@ -125,6 +127,7 @@ export function PlanetMesh({ planet, getElapsedDays, registerPlanet, nBodyStateR
       ) : null}
 
       <MoonSystem planet={planet} getElapsedDays={getElapsedDays} />
+      {isSelected ? <OrbitalInfrastructure planet={planet} /> : null}
     </group>
   );
 }
@@ -155,25 +158,6 @@ function PlanetAtmosphere({ planet }: { planet: Planet }) {
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         side={THREE.BackSide}
-      />
-    </mesh>
-  );
-}
-
-function SaturnRings({ radius, textureUrl }: { radius: number; textureUrl: string }) {
-  const texture = useTexture(textureUrl) as THREE.Texture;
-
-  return (
-    <mesh rotation={[Math.PI / 2, 0, 0]} receiveShadow>
-      <ringGeometry args={[radius * 1.35, radius * 2.38, 192]} />
-      <meshStandardMaterial
-        map={texture}
-        color="#f1dca8"
-        transparent
-        opacity={0.92}
-        side={THREE.DoubleSide}
-        roughness={0.92}
-        onUpdate={tuneStandardMaterial}
       />
     </mesh>
   );

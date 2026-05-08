@@ -1,19 +1,27 @@
 "use client";
 
 import {
-  BadgeInfo,
   Eye,
   Gauge,
   LocateFixed,
+  Map,
   Orbit,
   Pause,
   Play,
   Rocket,
   Settings2,
+  SlidersHorizontal,
   Sparkles
 } from "lucide-react";
+import { useState } from "react";
 import { updateSimulationConfig } from "@/lib/api";
 import type { ApiDataSource } from "@/lib/api";
+import {
+  explorationDestinationMap,
+  explorationDestinations,
+  galaxyDestinations,
+  systemDestinations
+} from "@/lib/exploration-data";
 import { formatNumber } from "@/lib/orbital";
 import { useSimulationStore } from "@/lib/store";
 import type { Planet, ViewMode } from "@/lib/types";
@@ -25,16 +33,20 @@ interface ControlPanelProps {
   dataError?: string | null;
 }
 
+type PanelTabId = "map" | "planets" | "settings";
+
 export function ControlPanel({
   planets,
   isLoading,
   dataSource = "api",
   dataError = null
 }: ControlPanelProps) {
+  const [activeTab, setActiveTab] = useState<PanelTabId>("map");
   const timeScale = useSimulationStore((state) => state.timeScale);
   const isPaused = useSimulationStore((state) => state.isPaused);
   const viewMode = useSimulationStore((state) => state.viewMode);
   const selectedPlanet = useSimulationStore((state) => state.selectedPlanet);
+  const selectedDestination = useSimulationStore((state) => state.selectedDestination);
   const followTarget = useSimulationStore((state) => state.followTarget);
   const showOrbits = useSimulationStore((state) => state.showOrbits);
   const nBodyEnabled = useSimulationStore((state) => state.nBodyEnabled);
@@ -47,6 +59,7 @@ export function ControlPanel({
   const setViewMode = useSimulationStore((state) => state.setViewMode);
   const selectPlanet = useSimulationStore((state) => state.selectPlanet);
   const setFollowTarget = useSimulationStore((state) => state.setFollowTarget);
+  const setSelectedDestination = useSimulationStore((state) => state.setSelectedDestination);
   const setShowOrbits = useSimulationStore((state) => state.setShowOrbits);
   const setNBodyEnabled = useSimulationStore((state) => state.setNBodyEnabled);
   const setGravityScale = useSimulationStore((state) => state.setGravityScale);
@@ -55,6 +68,18 @@ export function ControlPanel({
   const setShowDust = useSimulationStore((state) => state.setShowDust);
 
   const activePlanet = planets.find((planet) => planet.name === selectedPlanet) ?? planets[2];
+  const activeDestination =
+    explorationDestinations.find((destination) => destination.id === selectedDestination) ??
+    explorationDestinations[0];
+  const selectedGalaxyId =
+    activeDestination.kind === "galaxy"
+      ? activeDestination.id
+      : activeDestination.kind === "overview"
+        ? "milky-way"
+        : activeDestination.parentId ?? "milky-way";
+  const visibleSystems = systemDestinations.filter(
+    (destination) => destination.parentId === selectedGalaxyId
+  );
 
   const syncUpdate = (payload: Parameters<typeof updateSimulationConfig>[0]) => {
     void updateSimulationConfig(payload);
@@ -79,121 +104,239 @@ export function ControlPanel({
   };
 
   return (
-    <section className="pointer-events-none absolute inset-0 z-10 flex items-start justify-between gap-4 p-4 text-slate-100 md:p-6">
-      <div className="glass-panel pointer-events-auto flex max-h-[calc(100vh-2rem)] w-[min(23rem,calc(100vw-2rem))] flex-col rounded-lg p-4 md:max-h-[calc(100vh-3rem)]">
+    <section className="pointer-events-none absolute inset-0 z-10 p-3 text-slate-100 md:p-5">
+      <div className="glass-panel pointer-events-auto flex max-h-[calc(100vh-1.5rem)] w-[min(24rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg md:max-h-[calc(100vh-2.5rem)]">
+        <div className="border-b border-white/10 p-4 pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-lg font-semibold text-white">Space Exploration</h1>
+              <p className="text-xs text-slate-300">Orbital telemetry</p>
+            </div>
+            <div
+              className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium ${
+                dataSource === "fallback" && !isLoading
+                  ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
+                  : "border-cyan-200/30 bg-cyan-200/10 text-cyan-100"
+              }`}
+              title={dataError ?? undefined}
+            >
+              {isLoading ? "Syncing" : dataSource === "fallback" ? "Fallback" : "Live"}
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handlePaused}
+              className="flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-sm font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100"
+            >
+              {isPaused ? <Play size={16} /> : <Pause size={16} />}
+              {isPaused ? "Resume" : "Pause"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next =
+                  selectedDestination !== "solar-system"
+                    ? null
+                    : followTarget
+                      ? null
+                      : selectedPlanet;
+                setFollowTarget(next);
+              }}
+              className="flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-sm font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-45"
+              disabled={selectedDestination !== "solar-system"}
+            >
+              {followTarget ? <LocateFixed size={16} /> : <Eye size={16} />}
+              {selectedDestination !== "solar-system"
+                ? "Deep Space"
+                : followTarget
+                  ? "Tracking"
+                  : "Follow"}
+            </button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-1 rounded-md border border-slate-600/30 bg-black/20 p-1">
+            <PanelTab
+              active={activeTab === "map"}
+              icon={<Map size={15} />}
+              label="Map"
+              onClick={() => setActiveTab("map")}
+            />
+            <PanelTab
+              active={activeTab === "planets"}
+              icon={<Orbit size={15} />}
+              label="Planets"
+              onClick={() => setActiveTab("planets")}
+            />
+            <PanelTab
+              active={activeTab === "settings"}
+              icon={<SlidersHorizontal size={15} />}
+              label="Settings"
+              onClick={() => setActiveTab("settings")}
+            />
+          </div>
+        </div>
+
+        <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-4 pt-3">
+          {activeTab === "map" ? (
+            <MapTab
+              activeDestinationKind={activeDestination.kind}
+              activeDescription={activeDestination.description}
+              selectedDestination={selectedDestination}
+              selectedGalaxyId={selectedGalaxyId}
+              visibleSystems={visibleSystems}
+              onSelectDestination={setSelectedDestination}
+            />
+          ) : null}
+
+          {activeTab === "planets" ? (
+            <PlanetsTab
+              activePlanet={activePlanet}
+              planets={planets}
+              selectedPlanet={selectedPlanet}
+              selectedDestination={selectedDestination}
+              showOrbits={showOrbits}
+              onSelectPlanet={selectPlanet}
+              onSetShowOrbits={(show) => {
+                setShowOrbits(show);
+                syncUpdate({ showOrbits: show });
+              }}
+              onSetViewMode={setViewMode}
+            />
+          ) : null}
+
+          {activeTab === "settings" ? (
+            <SettingsTab
+              gravityScale={gravityScale}
+              nBodyEnabled={nBodyEnabled}
+              showDust={showDust}
+              showGalaxy={showGalaxy}
+              showNebula={showNebula}
+              timeScale={timeScale}
+              viewMode={viewMode}
+              onSetGravityScale={(value) => {
+                setGravityScale(value);
+                syncUpdate({ gravityScale: value });
+              }}
+              onSetNBodyEnabled={(enabled) => {
+                setNBodyEnabled(enabled);
+                syncUpdate({ nBodyEnabled: enabled });
+              }}
+              onSetShowDust={setShowDust}
+              onSetShowGalaxy={setShowGalaxy}
+              onSetShowNebula={setShowNebula}
+              onSetTimeScale={handleSpeedChange}
+              onSetViewMode={handleViewMode}
+            />
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+interface MapTabProps {
+  activeDestinationKind: string;
+  activeDescription: string;
+  selectedDestination: string;
+  selectedGalaxyId: string;
+  visibleSystems: typeof systemDestinations;
+  onSelectDestination: (destination: string) => void;
+}
+
+function MapTab({
+  activeDestinationKind,
+  activeDescription,
+  selectedDestination,
+  selectedGalaxyId,
+  visibleSystems,
+  onSelectDestination
+}: MapTabProps) {
+  return (
+    <div className="grid gap-3">
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold tracking-normal text-white">Space Exploration</h1>
-            <p className="text-xs text-slate-300">Orbital telemetry</p>
-          </div>
-          <div
-            className={`rounded-md border px-2 py-1 text-xs font-medium ${
-              dataSource === "fallback" && !isLoading
-                ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
-                : "border-cyan-200/30 bg-cyan-200/10 text-cyan-100"
-            }`}
-            title={dataError ?? undefined}
-          >
-            {isLoading ? "Syncing" : dataSource === "fallback" ? "Fallback" : "Live"}
-          </div>
+          <h3 className="flex items-center gap-2 text-sm font-medium text-white">
+            <Rocket size={16} className="text-cyan-200" />
+            Galaxy map
+          </h3>
+          <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+            {activeDestinationKind.replace("-", " ")}
+          </span>
         </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handlePaused}
-            className="flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-sm font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100"
-          >
-            {isPaused ? <Play size={16} /> : <Pause size={16} />}
-            {isPaused ? "Resume" : "Pause"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              const next = followTarget ? null : selectedPlanet;
-              setFollowTarget(next);
-            }}
-            className="flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-sm font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100"
-          >
-            {followTarget ? <LocateFixed size={16} /> : <Eye size={16} />}
-            {followTarget ? "Tracking" : "Follow"}
-          </button>
-        </div>
-
-        <div className="mt-4 rounded-md border border-slate-600/30 bg-black/20 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <label htmlFor="time-scale" className="flex items-center gap-2 text-sm font-medium">
-              <Gauge size={16} className="text-cyan-200" />
-              Time scale
-            </label>
-            <span className="text-xs text-slate-300">{formatNumber(timeScale, 0)} days/s</span>
-          </div>
-          <input
-            id="time-scale"
-            className="simulation-slider mt-3 w-full"
-            type="range"
-            min={0.5}
-            max={120}
-            step={1}
-            value={timeScale}
-            onChange={(event) => handleSpeedChange(Number(event.target.value))}
+        <p className="thin-scrollbar mt-2 max-h-28 overflow-y-auto pr-1 text-xs leading-5 text-slate-300">
+          {activeDescription}
+        </p>
+        <div className="mt-3 grid gap-2">
+          <DestinationButton
+            active={selectedDestination === "local-group"}
+            label="Local Group"
+            meta="Overview"
+            onClick={() => onSelectDestination("local-group")}
           />
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {[1, 8, 24, 90].map((speed) => (
-              <button
-                key={speed}
-                type="button"
-                onClick={() => handleSpeedChange(speed)}
-                className="rounded-md border border-slate-600/35 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 transition hover:border-cyan-200/50"
-              >
-                {speed}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-md border border-slate-600/30 bg-black/20 p-1">
-          <ModeButton
-            active={viewMode === "system"}
-            icon={<Orbit size={16} />}
-            label="System"
-            onClick={() => handleViewMode("system")}
-          />
-          <ModeButton
-            active={viewMode === "free"}
-            icon={<Rocket size={16} />}
-            label="Free"
-            onClick={() => handleViewMode("free")}
-          />
-        </div>
-
-        <div className="mt-4 rounded-md border border-slate-600/30 bg-black/20 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="flex items-center gap-2 text-sm font-medium">
-              <Sparkles size={16} className="text-cyan-200" />
-              Deep space layers
-            </h3>
-          </div>
-          <div className="mt-3 grid gap-2 text-xs text-slate-300">
-            <OptionToggle
-              label="Galaxy backdrop"
-              checked={showGalaxy}
-              onChange={(value) => setShowGalaxy(value)}
+          {galaxyDestinations.map((destination) => (
+            <DestinationButton
+              key={destination.id}
+              active={destination.id === selectedDestination}
+              label={destination.name}
+              meta="Galaxy"
+              onClick={() => onSelectDestination(destination.id)}
             />
-            <OptionToggle
-              label="Nebula bloom"
-              checked={showNebula}
-              onChange={(value) => setShowNebula(value)}
-            />
-            <OptionToggle
-              label="Cosmic dust"
-              checked={showDust}
-              onChange={(value) => setShowDust(value)}
-            />
-          </div>
+          ))}
         </div>
+      </section>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+            Systems In {explorationDestinationMap[selectedGalaxyId]?.name ?? "Milky Way"}
+          </h4>
+          <span className="text-[11px] text-slate-500">{visibleSystems.length} nodes</span>
+        </div>
+        <div className="mt-2 grid gap-2">
+          {visibleSystems.map((destination) => (
+            <DestinationButton
+              key={destination.id}
+              active={destination.id === selectedDestination}
+              label={destination.name}
+              meta={destination.kind === "solar-system" ? "Planets" : "System"}
+              onClick={() => onSelectDestination(destination.id)}
+            />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+interface PlanetsTabProps {
+  activePlanet: Planet;
+  planets: Planet[];
+  selectedPlanet: string;
+  selectedDestination: string;
+  showOrbits: boolean;
+  onSelectPlanet: (planet: string) => void;
+  onSetShowOrbits: (show: boolean) => void;
+  onSetViewMode: (mode: ViewMode) => void;
+}
+
+function PlanetsTab({
+  activePlanet,
+  planets,
+  selectedPlanet,
+  selectedDestination,
+  showOrbits,
+  onSelectPlanet,
+  onSetShowOrbits,
+  onSetViewMode
+}: PlanetsTabProps) {
+  const canInspectPlanets = selectedDestination === "solar-system";
+
+  return (
+    <div className="grid gap-3">
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
             <Settings2 size={16} className="text-cyan-200" />
             Planets
@@ -202,16 +345,19 @@ export function ControlPanel({
             <input
               type="checkbox"
               checked={showOrbits}
-              onChange={(event) => {
-                setShowOrbits(event.target.checked);
-                syncUpdate({ showOrbits: event.target.checked });
-              }}
+              onChange={(event) => onSetShowOrbits(event.target.checked)}
             />
             Orbits
           </label>
         </div>
 
-        <div className="thin-scrollbar mt-3 grid gap-2 overflow-y-auto pr-1">
+        {!canInspectPlanets ? (
+          <p className="mt-2 text-xs text-slate-400">
+            Select Solar System from the map to inspect planets.
+          </p>
+        ) : null}
+
+        <div className="mt-3 grid gap-2">
           {planets.map((planet) => {
             const active = planet.name === selectedPlanet;
 
@@ -219,12 +365,13 @@ export function ControlPanel({
               <button
                 key={planet.name}
                 type="button"
-                onClick={() => selectPlanet(planet.name)}
-                className={`grid grid-cols-[1rem_1fr_auto] items-center gap-3 rounded-md border px-3 py-2 text-left transition ${
+                onClick={() => onSelectPlanet(planet.name)}
+                disabled={!canInspectPlanets}
+                className={`grid grid-cols-[1rem_1fr_auto] items-center gap-3 rounded-md border px-3 py-2 text-left transition disabled:cursor-not-allowed ${
                   active
                     ? "border-cyan-200/60 bg-cyan-200/12 text-cyan-50"
                     : "border-slate-600/25 bg-slate-950/45 text-slate-200 hover:border-cyan-200/35"
-                }`}
+                } ${canInspectPlanets ? "" : "opacity-55"}`}
               >
                 <span
                   className="h-3 w-3 rounded-full"
@@ -237,70 +384,237 @@ export function ControlPanel({
                     {formatNumber(planet.semiMajorAxisAu, 2)} AU
                   </span>
                 </span>
-                <span className="text-xs text-slate-300">{formatNumber(planet.orbitalVelocityKmS, 1)} km/s</span>
+                <span className="text-xs text-slate-300">
+                  {formatNumber(planet.orbitalVelocityKmS, 1)} km/s
+                </span>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {activePlanet ? (
-        <aside className="glass-panel pointer-events-auto hidden w-80 rounded-lg p-4 lg:block">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-cyan-200">Selected planet</p>
-              <h2 className="mt-1 text-2xl font-semibold text-white">{activePlanet.name}</h2>
-            </div>
-            <BadgeInfo size={20} className="mt-1 text-cyan-200" />
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-white">{activePlanet.name}</h3>
+          <button
+            type="button"
+            onClick={() => onSetViewMode("planet")}
+            className="rounded-md border border-cyan-200/30 bg-cyan-200/10 px-2 py-1 text-xs font-medium text-cyan-100 transition hover:border-cyan-100/60"
+          >
+            Inspect
+          </button>
+        </div>
+        <p className="thin-scrollbar mt-2 max-h-32 overflow-y-auto pr-1 text-xs leading-5 text-slate-300">
+          {activePlanet.description}
+        </p>
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+          <Info label="Orbit" value={`${formatNumber(activePlanet.semiMajorAxisAu, 2)} AU`} />
+          <Info label="Speed" value={`${formatNumber(activePlanet.orbitalVelocityKmS, 1)} km/s`} />
+          <Info label="Moons" value={formatNumber(activePlanet.moonCount, 0)} />
+          <Info label="Tilt" value={`${formatNumber(activePlanet.axialTilt, 1)} deg`} />
+        </dl>
+      </section>
+    </div>
+  );
+}
+
+interface SettingsTabProps {
+  gravityScale: number;
+  nBodyEnabled: boolean;
+  showDust: boolean;
+  showGalaxy: boolean;
+  showNebula: boolean;
+  timeScale: number;
+  viewMode: ViewMode;
+  onSetGravityScale: (value: number) => void;
+  onSetNBodyEnabled: (enabled: boolean) => void;
+  onSetShowDust: (show: boolean) => void;
+  onSetShowGalaxy: (show: boolean) => void;
+  onSetShowNebula: (show: boolean) => void;
+  onSetTimeScale: (value: number) => void;
+  onSetViewMode: (mode: ViewMode) => void;
+}
+
+function SettingsTab({
+  gravityScale,
+  nBodyEnabled,
+  showDust,
+  showGalaxy,
+  showNebula,
+  timeScale,
+  viewMode,
+  onSetGravityScale,
+  onSetNBodyEnabled,
+  onSetShowDust,
+  onSetShowGalaxy,
+  onSetShowNebula,
+  onSetTimeScale,
+  onSetViewMode
+}: SettingsTabProps) {
+  return (
+    <div className="grid gap-3">
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor="time-scale" className="flex items-center gap-2 text-sm font-medium">
+            <Gauge size={16} className="text-cyan-200" />
+            Time scale
+          </label>
+          <span className="text-xs text-slate-300">{formatNumber(timeScale, 0)} days/s</span>
+        </div>
+        <input
+          id="time-scale"
+          className="simulation-slider mt-3 w-full"
+          type="range"
+          min={0.5}
+          max={120}
+          step={1}
+          value={timeScale}
+          onChange={(event) => onSetTimeScale(Number(event.target.value))}
+        />
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {[1, 8, 24, 90].map((speed) => (
+            <button
+              key={speed}
+              type="button"
+              onClick={() => onSetTimeScale(speed)}
+              className="rounded-md border border-slate-600/35 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 transition hover:border-cyan-200/50"
+            >
+              {speed}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+        <div className="grid grid-cols-3 gap-2 rounded-md border border-slate-600/30 bg-black/20 p-1">
+          <ModeButton
+            active={viewMode === "system"}
+            icon={<Orbit size={16} />}
+            label="System"
+            onClick={() => onSetViewMode("system")}
+          />
+          <ModeButton
+            active={viewMode === "free"}
+            icon={<Rocket size={16} />}
+            label="Free"
+            onClick={() => onSetViewMode("free")}
+          />
+          <ModeButton
+            active={viewMode === "planet"}
+            icon={<Eye size={16} />}
+            label="Planet"
+            onClick={() => onSetViewMode("planet")}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+        <h3 className="flex items-center gap-2 text-sm font-medium">
+          <Sparkles size={16} className="text-cyan-200" />
+          Layers
+        </h3>
+        <div className="mt-3 grid gap-2 text-xs text-slate-300">
+          <OptionToggle
+            label="Galaxy backdrop"
+            checked={showGalaxy}
+            onChange={onSetShowGalaxy}
+          />
+          <OptionToggle
+            label="Nebula bloom"
+            checked={showNebula}
+            onChange={onSetShowNebula}
+          />
+          <OptionToggle
+            label="Cosmic dust"
+            checked={showDust}
+            onChange={onSetShowDust}
+          />
+        </div>
+      </section>
+
+      <section className="grid gap-3 rounded-md border border-slate-600/30 bg-black/20 px-3 py-2 text-sm text-slate-200">
+        <label className="flex items-center justify-between gap-3">
+          <span>Simplified N-body</span>
+          <input
+            type="checkbox"
+            checked={nBodyEnabled}
+            onChange={(event) => onSetNBodyEnabled(event.target.checked)}
+          />
+        </label>
+        <div>
+          <div className="flex items-center justify-between text-xs text-slate-300">
+            <span>Gravity scale</span>
+            <span>{formatNumber(gravityScale, 2)}x</span>
           </div>
+          <input
+            className="simulation-slider mt-2 w-full"
+            type="range"
+            aria-label="Gravity scale"
+            min={0.6}
+            max={1.6}
+            step={0.05}
+            value={gravityScale}
+            onChange={(event) => onSetGravityScale(Number(event.target.value))}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
 
-          <p className="mt-3 text-sm leading-6 text-slate-300">{activePlanet.description}</p>
+function DestinationButton({
+  active,
+  label,
+  meta,
+  onClick
+}: {
+  active: boolean;
+  label: string;
+  meta: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-md border px-3 py-2 text-left transition ${
+        active
+          ? "border-cyan-200/60 bg-cyan-200/12 text-cyan-50"
+          : "border-slate-600/25 bg-slate-950/45 text-slate-200 hover:border-cyan-200/35"
+      }`}
+    >
+      <span className="flex items-center justify-between gap-3">
+        <span className="min-w-0 truncate text-sm font-medium">{label}</span>
+        <span className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-slate-400">
+          {meta}
+        </span>
+      </span>
+    </button>
+  );
+}
 
-          <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <Info label="Radius" value={`${formatNumber(activePlanet.radius, 2)} Earth`} />
-            <Info label="Orbit" value={`${formatNumber(activePlanet.semiMajorAxisAu, 2)} AU`} />
-            <Info label="Period" value={`${formatNumber(activePlanet.siderealPeriodDays, 0)} days`} />
-            <Info label="Speed" value={`${formatNumber(activePlanet.orbitalVelocityKmS, 1)} km/s`} />
-            <Info label="Eccentricity" value={formatNumber(activePlanet.eccentricity, 4)} />
-            <Info label="Tilt" value={`${formatNumber(activePlanet.axialTilt, 2)} deg`} />
-          </dl>
-
-          <div className="mt-4 grid gap-3 rounded-md border border-slate-600/30 bg-black/20 px-3 py-2 text-sm text-slate-200">
-            <label className="flex items-center justify-between gap-3">
-              <span>Simplified N-body</span>
-              <input
-                type="checkbox"
-                checked={nBodyEnabled}
-                onChange={(event) => {
-                  setNBodyEnabled(event.target.checked);
-                  syncUpdate({ nBodyEnabled: event.target.checked });
-                }}
-              />
-            </label>
-            <div>
-              <div className="flex items-center justify-between text-xs text-slate-300">
-                <span>Gravity scale</span>
-                <span>{formatNumber(gravityScale, 2)}x</span>
-              </div>
-              <input
-                className="simulation-slider mt-2 w-full"
-                type="range"
-                aria-label="Gravity scale"
-                min={0.6}
-                max={1.6}
-                step={0.05}
-                value={gravityScale}
-                onChange={(event) => {
-                  const value = Number(event.target.value);
-                  setGravityScale(value);
-                  syncUpdate({ gravityScale: value });
-                }}
-              />
-            </div>
-          </div>
-        </aside>
-      ) : null}
-    </section>
+function PanelTab({
+  active,
+  icon,
+  label,
+  onClick
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex min-h-9 items-center justify-center gap-1 rounded px-2 text-xs font-medium transition ${
+        active ? "bg-cyan-200 text-slate-950" : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

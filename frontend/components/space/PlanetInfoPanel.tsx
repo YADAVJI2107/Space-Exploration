@@ -64,7 +64,7 @@ export function PlanetInfoPanel({ planet, favorites, onToggleFavorite }: PlanetI
   const latestMarsPhoto = liveMarsData?.latest_photos?.[0];
 
   return (
-    <div className="absolute bottom-4 left-4 max-w-sm overflow-hidden rounded-lg border border-cyan-500/30 bg-slate-950/90 shadow-lg backdrop-blur">
+    <div className="absolute bottom-3 right-3 z-10 hidden max-h-[44vh] w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-cyan-500/30 bg-slate-950/90 shadow-lg backdrop-blur lg:block md:bottom-5 md:right-5">
       {/* Header */}
       <div
         className="flex cursor-pointer items-center justify-between border-b border-cyan-500/20 bg-gradient-to-r from-cyan-900/20 to-transparent px-4 py-3 hover:bg-cyan-900/30"
@@ -81,7 +81,7 @@ export function PlanetInfoPanel({ planet, favorites, onToggleFavorite }: PlanetI
       </div>
 
       {isExpanded && (
-        <div className="space-y-4 p-4">
+        <div className="thin-scrollbar max-h-[calc(44vh-3rem)] space-y-4 overflow-y-auto p-4">
           <button
             type="button"
             onClick={() => onToggleFavorite(planet.name)}

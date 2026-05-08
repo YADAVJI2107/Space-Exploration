@@ -1,4 +1,19 @@
-export type ViewMode = "system" | "free";
+export type ViewMode = "system" | "free" | "planet";
+export type FocusTargetKind = "overview" | "solar-system" | "star-system" | "galaxy";
+
+export interface ExplorationDestination {
+  id: string;
+  name: string;
+  kind: FocusTargetKind;
+  description: string;
+  position: [number, number, number];
+  accentColor: string;
+  scale: number;
+  orbitingBodies: number;
+  parentId?: string | null;
+  focusDistance?: number;
+  label?: string;
+}
 
 export interface Planet {
   name: string;
