@@ -13,3 +13,7 @@ export function tuneTexture(texture: THREE.Texture | null | undefined) {
 export function tuneStandardMaterial(material: THREE.MeshStandardMaterial) {
   tuneTexture(material.map);
 }
+
+export function tuneBasicMaterialTexture(texture: THREE.Texture | null | undefined) {
+  tuneTexture(texture);
+}

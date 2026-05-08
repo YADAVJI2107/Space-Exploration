@@ -1,9 +1,11 @@
 "use client";
 
+import { Billboard, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { seededRandom } from "@/lib/seeded-random";
+import { tuneBasicMaterialTexture } from "@/lib/three-texture";
 
 interface GalaxyBackdropProps {
   starCount?: number;
@@ -19,13 +21,15 @@ export function GalaxyBackdrop({
   thickness = 18
 }: GalaxyBackdropProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const coreRef = useRef<THREE.Mesh>(null);
+  const galaxyPlaneRef = useRef<THREE.Mesh>(null);
+  const spriteTexture = useTexture("/sprites/soft-disc.svg") as THREE.Texture;
+  const galaxyTexture = useTexture("/nasa/spiral-galaxy-ngc3147.jpg") as THREE.Texture;
 
   const { positions, colors } = useMemo(() => {
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
     const coreColor = new THREE.Color("#f8fafc");
-    const rimColor = new THREE.Color("#4f9fdc");
+    const rimColor = new THREE.Color("#7aa4c9");
 
     for (let index = 0; index < starCount; index += 1) {
       const seed = index + starCount * 7 + radius * 3;
@@ -55,10 +59,10 @@ export function GalaxyBackdrop({
 
   useFrame((_, delta) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.015;
+      pointsRef.current.rotation.y += delta * 0.004;
     }
-    if (coreRef.current) {
-      coreRef.current.rotation.y -= delta * 0.01;
+    if (galaxyPlaneRef.current) {
+      galaxyPlaneRef.current.rotation.z += delta * 0.002;
     }
   });
 
@@ -70,26 +74,32 @@ export function GalaxyBackdrop({
           <bufferAttribute attach="attributes-color" args={[colors, 3]} />
         </bufferGeometry>
         <pointsMaterial
-          size={0.6}
+          size={0.48}
           sizeAttenuation
+          map={spriteTexture}
+          alphaMap={spriteTexture}
+          alphaTest={0.08}
           vertexColors
           transparent
-          opacity={0.82}
+          opacity={0.55}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </points>
-      <mesh ref={coreRef} scale={1.4}>
-        <sphereGeometry args={[22, 64, 64]} />
-        <meshBasicMaterial
-          color="#a7d4ff"
-          transparent
-          opacity={0.08}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          side={THREE.BackSide}
-        />
-      </mesh>
+
+      <Billboard position={[0, 0, -125]} follow lockX={false} lockY={false} lockZ={false}>
+        <mesh ref={galaxyPlaneRef} scale={[110, 100, 1]}>
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial
+            map={galaxyTexture}
+            transparent
+            opacity={0.24}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
+          />
+        </mesh>
+      </Billboard>
     </group>
   );
 }

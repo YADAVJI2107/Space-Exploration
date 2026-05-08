@@ -65,3 +65,7 @@ export function formatNumber(value: number, digits = 2) {
     maximumFractionDigits: digits
   }).format(value);
 }
+
+export function visibleRotationDaysPerSecond(timeScale: number) {
+  return Math.max(0.12, Math.pow(Math.max(timeScale, 0.1), 0.45) * 0.2);
+}

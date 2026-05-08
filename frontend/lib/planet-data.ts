@@ -1,9 +1,9 @@
 import type { Planet, SimulationConfig } from "@/lib/types";
 
 export const fallbackSimulationConfig: SimulationConfig = {
-  timeScale: 45,
+  timeScale: 8,
   gravitationalConstant: 6.6743e-11,
-  galacticSpeed: 0.16,
+  galacticSpeed: 0.08,
   gravityScale: 1,
   backendDriven: false,
   nBodyEnabled: false,
@@ -36,6 +36,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#9f978d",
     textureUrl: "/textures/2k_mercury.jpg",
     hasRings: false,
+    moonCount: 0,
+    featuredMoons: [],
     orbitalVelocityKmS: 47.36,
     description: "Small, iron-rich inner planet with the most eccentric orbit in this model."
   },
@@ -59,6 +61,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#d8b36b",
     textureUrl: "/textures/2k_venus_surface.jpg",
     hasRings: false,
+    moonCount: 0,
+    featuredMoons: [],
     orbitalVelocityKmS: 35.02,
     description: "A slowly rotating, retrograde world with a nearly circular orbit."
   },
@@ -82,6 +86,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#5aa6d6",
     textureUrl: "/textures/2k_earth_daymap.jpg",
     hasRings: false,
+    moonCount: 1,
+    featuredMoons: ["Moon"],
     orbitalVelocityKmS: 29.78,
     description: "The reference body: one astronomical unit from the Sun with a tilted spin axis."
   },
@@ -105,6 +111,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#d26a45",
     textureUrl: "/textures/2k_mars.jpg",
     hasRings: false,
+    moonCount: 2,
+    featuredMoons: ["Phobos", "Deimos"],
     orbitalVelocityKmS: 24.07,
     description: "A dusty terrestrial planet whose eccentricity makes its speed changes easy to see."
   },
@@ -128,6 +136,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#d7b48a",
     textureUrl: "/textures/2k_jupiter.jpg",
     hasRings: false,
+    moonCount: 101,
+    featuredMoons: ["Io", "Europa", "Ganymede", "Callisto"],
     orbitalVelocityKmS: 13.07,
     description: "The dominant giant planet, scaled down visually so the whole system remains navigable."
   },
@@ -152,6 +162,8 @@ export const fallbackPlanets: Planet[] = [
     textureUrl: "/textures/2k_saturn.jpg",
     ringTextureUrl: "/textures/2k_saturn_ring_alpha.png",
     hasRings: true,
+    moonCount: 274,
+    featuredMoons: ["Titan", "Enceladus", "Rhea", "Iapetus", "Dione"],
     orbitalVelocityKmS: 9.68,
     description: "A low-density gas giant with a ring plane aligned to its tilted equator."
   },
@@ -175,6 +187,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#8fd5df",
     textureUrl: "/textures/2k_uranus.jpg",
     hasRings: false,
+    moonCount: 28,
+    featuredMoons: ["Miranda", "Ariel", "Umbriel", "Titania", "Oberon"],
     orbitalVelocityKmS: 6.8,
     description: "An ice giant rolling around the Sun with an extreme axial tilt."
   },
@@ -198,6 +212,8 @@ export const fallbackPlanets: Planet[] = [
     color: "#3f67df",
     textureUrl: "/textures/2k_neptune.jpg",
     hasRings: false,
+    moonCount: 16,
+    featuredMoons: ["Triton", "Proteus", "Nereid", "Hippocamp"],
     orbitalVelocityKmS: 5.43,
     description: "The outer ice giant in this simulation, moving slowly through a slightly tilted orbit."
   }

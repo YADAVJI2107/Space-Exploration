@@ -132,14 +132,14 @@ export function ControlPanel({
             id="time-scale"
             className="simulation-slider mt-3 w-full"
             type="range"
-            min={1}
-            max={365}
+            min={0.5}
+            max={120}
             step={1}
             value={timeScale}
             onChange={(event) => handleSpeedChange(Number(event.target.value))}
           />
           <div className="mt-3 grid grid-cols-4 gap-2">
-            {[5, 45, 120, 365].map((speed) => (
+            {[1, 8, 24, 90].map((speed) => (
               <button
                 key={speed}
                 type="button"

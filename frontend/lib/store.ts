@@ -28,7 +28,7 @@ interface SimulationState {
 }
 
 export const useSimulationStore = create<SimulationState>((set) => ({
-  timeScale: 45,
+  timeScale: 8,
   isPaused: false,
   viewMode: "system",
   selectedPlanet: "Earth",

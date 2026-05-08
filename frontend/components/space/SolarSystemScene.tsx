@@ -11,6 +11,7 @@ import { GalaxyBackdrop } from "@/components/space/GalaxyBackdrop";
 import { InstancedStars } from "@/components/space/InstancedStars";
 import { NebulaField } from "@/components/space/NebulaField";
 import { OrbitPath } from "@/components/space/OrbitPath";
+import { PostprocessingEffects } from "@/components/space/PostprocessingEffects";
 import { PlanetMesh } from "@/components/space/PlanetMesh";
 import { Sun } from "@/components/space/Sun";
 import {
@@ -29,6 +30,7 @@ interface SolarSystemSceneProps {
 
 export function SolarSystemScene({ planets, config }: SolarSystemSceneProps) {
   const systemRef = useRef<THREE.Group>(null);
+  const galacticFrameRef = useRef<THREE.Group>(null);
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const planetObjects = useRef<Record<string, THREE.Object3D>>({});
   const elapsedDays = useRef(0);
@@ -69,24 +71,26 @@ export function SolarSystemScene({ planets, config }: SolarSystemSceneProps) {
 
     if (!isPaused) {
       elapsedDays.current += delta * timeScale;
-      galacticProgress.current += delta * config.galacticSpeed * (timeScale / 45);
+      galacticProgress.current += delta * config.galacticSpeed * Math.pow(timeScale / 8, 0.35);
     }
 
-    if (!systemRef.current) {
+    if (!systemRef.current || !galacticFrameRef.current) {
       return;
     }
 
     const progress = galacticProgress.current;
-    systemRef.current.position.set(
-      Math.sin(progress * 0.21) * 1.25,
-      Math.sin(progress * 0.13) * 0.42,
-      -progress * 8.5
-    );
+    const orbitalPhase = progress * 0.085;
+    const systemX = Math.sin(orbitalPhase) * 9;
+    const systemY = Math.sin(progress * 0.042) * 0.55;
+    const systemZ = (1 - Math.cos(orbitalPhase)) * 22 - 10;
+    const tangentYaw = Math.atan2(Math.cos(orbitalPhase) * 9, Math.sin(orbitalPhase) * 22);
 
-    // The root transform gives the system a slow galactic-arc drift while
-    // individual planet positions remain governed by local orbital elements.
-    systemRef.current.rotation.y = progress * 0.028;
-    systemRef.current.rotation.z = Math.sin(progress * 0.11) * 0.018;
+    systemRef.current.position.set(systemX, systemY, systemZ);
+    systemRef.current.rotation.y = tangentYaw * 0.08;
+    systemRef.current.rotation.z = Math.sin(progress * 0.05) * 0.007;
+
+    galacticFrameRef.current.position.set(systemX * 0.08, systemY * 0.2, systemZ * 0.1);
+    galacticFrameRef.current.rotation.y = progress * 0.01;
 
     if (nBodyEnabled) {
       if (
@@ -121,11 +125,13 @@ export function SolarSystemScene({ planets, config }: SolarSystemSceneProps) {
       <fog attach="fog" args={["#070b16", 45, 220]} />
       <ambientLight intensity={0.055} />
       <hemisphereLight intensity={0.08} color="#dbeafe" groundColor="#020617" />
-      {showGalaxy ? <GalaxyBackdrop /> : null}
-      {showNebula ? <NebulaField /> : null}
-      {showDust ? <CosmicDust /> : null}
-      <InstancedStars count={4200} radius={155} depth={230} parallax={0.35} size={0.018} />
-      <InstancedStars count={1800} radius={95} depth={150} parallax={0.85} size={0.012} warm />
+      <group ref={galacticFrameRef}>
+        {showGalaxy ? <GalaxyBackdrop /> : null}
+        {showNebula ? <NebulaField /> : null}
+        {showDust ? <CosmicDust /> : null}
+        <InstancedStars count={3200} radius={155} depth={230} parallax={0.22} size={0.016} />
+        <InstancedStars count={1200} radius={95} depth={150} parallax={0.52} size={0.01} warm />
+      </group>
 
       <group ref={systemRef}>
         <Sun />
@@ -158,6 +164,7 @@ export function SolarSystemScene({ planets, config }: SolarSystemSceneProps) {
       />
 
       <CameraRig controlsRef={controlsRef} planetObjects={planetObjects} systemRef={systemRef} />
+      <PostprocessingEffects />
       <Preload all />
     </>
   );

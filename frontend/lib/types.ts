@@ -21,6 +21,8 @@ export interface Planet {
   textureUrl: string;
   ringTextureUrl?: string | null;
   hasRings: boolean;
+  moonCount: number;
+  featuredMoons: string[];
   orbitalVelocityKmS: number;
   description: string;
 }
@@ -41,4 +43,36 @@ export interface PlanetPosition {
   x: number;
   y: number;
   z: number;
+}
+
+export interface SessionState {
+  id: string;
+  name: string;
+  selectedPlanet: string;
+  viewMode: ViewMode;
+  timeScale: number;
+  paused: boolean;
+  backendDriven: boolean;
+  nBodyEnabled: boolean;
+  gravityScale: number;
+  showOrbits: boolean;
+  favorites: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrajectoryPoint {
+  at: string;
+  x: number;
+  y: number;
+  z: number;
+  vx?: number | null;
+  vy?: number | null;
+  vz?: number | null;
+}
+
+export interface PlanetTrajectory {
+  name: string;
+  source: string;
+  points: TrajectoryPoint[];
 }
