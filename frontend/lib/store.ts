@@ -48,9 +48,16 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   setViewMode: (viewMode) =>
     set((state) => ({
       viewMode,
-      selectedDestination: viewMode === "planet" ? "solar-system" : state.selectedDestination,
+      selectedDestination:
+        viewMode === "planet"
+          ? "solar-system"
+          : viewMode === "galactic"
+            ? state.selectedDestination === "solar-system"
+              ? "milky-way"
+              : state.selectedDestination
+            : state.selectedDestination,
       followTarget:
-        viewMode === "free" || viewMode === "planet"
+        viewMode === "free" || viewMode === "planet" || viewMode === "galactic"
           ? null
           : state.followTarget ?? state.selectedPlanet
     })),
@@ -60,8 +67,18 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   setSelectedDestination: (selectedDestination) =>
     set((state) => ({
       selectedDestination,
-      followTarget: selectedDestination === "solar-system" ? state.selectedPlanet : null,
-      viewMode: selectedDestination === "solar-system" ? "system" : "free"
+      followTarget:
+        state.viewMode === "galactic"
+          ? null
+          : selectedDestination === "solar-system"
+            ? state.selectedPlanet
+            : null,
+      viewMode:
+        state.viewMode === "galactic"
+          ? "galactic"
+          : selectedDestination === "solar-system"
+            ? "system"
+            : "free"
     })),
   setShowOrbits: (showOrbits) => set({ showOrbits }),
   setNBodyEnabled: (nBodyEnabled) => set({ nBodyEnabled }),

@@ -15,6 +15,7 @@ export default function SpaceSimulation() {
   const { planets, config, isLoading, dataSource, dataError } = useSpaceData();
   const { session, favorites, syncState, error, toggleFavorite } = useSession();
   const selectedPlanet = useSimulationStore((state) => state.selectedPlanet);
+  const viewMode = useSimulationStore((state) => state.viewMode);
   const currentPlanet = planets.find((p) => p.name === selectedPlanet) || null;
 
   return (
@@ -48,11 +49,13 @@ export default function SpaceSimulation() {
         dataError={dataError}
       />
       <SessionPanel session={session} syncState={syncState} error={error} />
-      <PlanetInfoPanel
-        planet={currentPlanet}
-        favorites={favorites}
-        onToggleFavorite={toggleFavorite}
-      />
+      {viewMode === "galactic" ? null : (
+        <PlanetInfoPanel
+          planet={currentPlanet}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+        />
+      )}
     </main>
   );
 }

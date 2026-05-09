@@ -1,4 +1,4 @@
-export type ViewMode = "system" | "free" | "planet";
+export type ViewMode = "system" | "free" | "planet" | "galactic";
 export type FocusTargetKind = "overview" | "solar-system" | "star-system" | "galaxy";
 
 export interface ExplorationDestination {

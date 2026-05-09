@@ -9,6 +9,7 @@ import { CameraRig } from "@/components/space/CameraRig";
 import { CosmicDust } from "@/components/space/CosmicDust";
 import { ExplorationNeighborhood } from "@/components/space/ExplorationNeighborhood";
 import { GalaxyBackdrop } from "@/components/space/GalaxyBackdrop";
+import { GalacticMotionView } from "@/components/space/GalacticMotionView";
 import { InstancedStars } from "@/components/space/InstancedStars";
 import { NebulaField } from "@/components/space/NebulaField";
 import { OrbitPath } from "@/components/space/OrbitPath";
@@ -159,6 +160,38 @@ export function SolarSystemScene({ planets, config }: SolarSystemSceneProps) {
           maxDistance={24}
           target={[0, 0, 0]}
         />
+        <Preload all />
+      </>
+    );
+  }
+
+  if (viewMode === "galactic") {
+    return (
+      <>
+        <PerspectiveCamera makeDefault position={[0, 112, 218]} fov={46} near={0.1} far={2400} />
+        <fog attach="fog" args={["#030712", 190, 980]} />
+        <color attach="background" args={["#02030a"]} />
+        {showGalaxy ? <GalaxyBackdrop radius={220} starCount={7200} thickness={24} /> : null}
+        {showNebula ? <NebulaField /> : null}
+        {showDust ? <CosmicDust /> : null}
+        <InstancedStars count={4200} radius={230} depth={360} parallax={0.18} size={0.014} />
+        <InstancedStars count={1600} radius={150} depth={260} parallax={0.42} size={0.009} warm />
+        <GalacticMotionView planets={sortedPlanets} getElapsedDays={getElapsedDays} />
+
+        <OrbitControls
+          ref={controlsRef}
+          makeDefault
+          enableDamping
+          dampingFactor={0.055}
+          rotateSpeed={0.66}
+          zoomSpeed={0.9}
+          panSpeed={0.72}
+          screenSpacePanning
+          minDistance={18}
+          maxDistance={760}
+          target={[0, -8, -38]}
+        />
+        <PostprocessingEffects />
         <Preload all />
       </>
     );

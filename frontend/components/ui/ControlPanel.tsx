@@ -229,6 +229,7 @@ export function ControlPanel({
               showDust={showDust}
               showGalaxy={showGalaxy}
               showNebula={showNebula}
+              selectedDestination={selectedDestination}
               timeScale={timeScale}
               viewMode={viewMode}
               onSetGravityScale={(value) => {
@@ -242,6 +243,7 @@ export function ControlPanel({
               onSetShowDust={setShowDust}
               onSetShowGalaxy={setShowGalaxy}
               onSetShowNebula={setShowNebula}
+              onSelectDestination={setSelectedDestination}
               onSetTimeScale={handleSpeedChange}
               onSetViewMode={handleViewMode}
             />
@@ -440,6 +442,7 @@ interface SettingsTabProps {
   showDust: boolean;
   showGalaxy: boolean;
   showNebula: boolean;
+  selectedDestination: string;
   timeScale: number;
   viewMode: ViewMode;
   onSetGravityScale: (value: number) => void;
@@ -447,6 +450,7 @@ interface SettingsTabProps {
   onSetShowDust: (show: boolean) => void;
   onSetShowGalaxy: (show: boolean) => void;
   onSetShowNebula: (show: boolean) => void;
+  onSelectDestination: (destination: string) => void;
   onSetTimeScale: (value: number) => void;
   onSetViewMode: (mode: ViewMode) => void;
 }
@@ -457,6 +461,7 @@ function SettingsTab({
   showDust,
   showGalaxy,
   showNebula,
+  selectedDestination,
   timeScale,
   viewMode,
   onSetGravityScale,
@@ -464,6 +469,7 @@ function SettingsTab({
   onSetShowDust,
   onSetShowGalaxy,
   onSetShowNebula,
+  onSelectDestination,
   onSetTimeScale,
   onSetViewMode
 }: SettingsTabProps) {
@@ -502,7 +508,7 @@ function SettingsTab({
       </section>
 
       <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
-        <div className="grid grid-cols-3 gap-2 rounded-md border border-slate-600/30 bg-black/20 p-1">
+        <div className="grid grid-cols-2 gap-2 rounded-md border border-slate-600/30 bg-black/20 p-1 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
           <ModeButton
             active={viewMode === "system"}
             icon={<Orbit size={16} />}
@@ -521,8 +527,42 @@ function SettingsTab({
             label="Planet"
             onClick={() => onSetViewMode("planet")}
           />
+          <ModeButton
+            active={viewMode === "galactic"}
+            icon={<Sparkles size={16} />}
+            label="Motion"
+            onClick={() => onSetViewMode("galactic")}
+          />
         </div>
+        <p className="mt-2 text-xs leading-5 text-slate-400">
+          Motion mode shows systems revolving around galaxy centers in 3D while the current map remains available in Free view.
+        </p>
       </section>
+
+      {viewMode === "galactic" ? (
+        <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
+          <h3 className="text-sm font-medium text-white">Motion Focus</h3>
+          <p className="mt-1 text-xs leading-5 text-slate-400">
+            Recenter the Motion scene on another galaxy without leaving the vortex view.
+          </p>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {galaxyDestinations.map((galaxy) => (
+              <button
+                key={galaxy.id}
+                type="button"
+                onClick={() => onSelectDestination(galaxy.id)}
+                className={`rounded-md border px-2 py-1.5 text-left text-xs font-normal transition ${
+                  selectedDestination === galaxy.id
+                    ? "border-cyan-200/50 bg-cyan-200/12 text-cyan-50"
+                    : "border-slate-600/30 bg-slate-950/50 text-slate-300 hover:border-cyan-200/35"
+                }`}
+              >
+                {galaxy.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-md border border-slate-600/30 bg-black/20 p-3">
         <h3 className="flex items-center gap-2 text-sm font-medium">
