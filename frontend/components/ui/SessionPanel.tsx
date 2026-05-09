@@ -11,7 +11,7 @@ interface SessionPanelProps {
 
 export function SessionPanel({ session, syncState, error }: SessionPanelProps) {
   return (
-    <aside className="glass-panel pointer-events-auto absolute right-4 top-4 z-10 hidden w-72 rounded-lg p-4 text-slate-100 lg:block md:right-6 md:top-6">
+    <aside className="glass-panel pointer-events-auto absolute right-3 top-3 z-10 hidden w-64 rounded-lg p-3 text-slate-100 xl:block 2xl:right-6 2xl:top-6 2xl:w-72 2xl:p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-cyan-200">Persistent session</p>

@@ -18,8 +18,9 @@ export default function SpaceSimulation() {
   const currentPlanet = planets.find((p) => p.name === selectedPlanet) || null;
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-[#02030a]">
+    <main className="relative h-svh w-screen overflow-hidden bg-[#02030a]">
       <Canvas
+        className="touch-none"
         camera={{ position: [0, 14, 31], fov: 55, near: 0.02, far: 1400 }}
         dpr={[1, 1.25]}
         gl={{

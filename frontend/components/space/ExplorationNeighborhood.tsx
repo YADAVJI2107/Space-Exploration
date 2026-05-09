@@ -10,9 +10,9 @@ import {
   galaxyDestinations,
   systemDestinations
 } from "@/lib/exploration-data";
+import { RoundedTexturePlane } from "@/components/space/RoundedTexturePlane";
 import { seededRandom } from "@/lib/seeded-random";
 import { useSimulationStore } from "@/lib/store";
-import { tuneBasicMaterialTexture } from "@/lib/three-texture";
 import type { ExplorationDestination } from "@/lib/types";
 
 interface ExplorationNeighborhoodProps {
@@ -188,18 +188,13 @@ function GalaxyMarker({
           document.body.style.cursor = "default";
         }}
       >
-        <mesh rotation={[Math.PI / 2, 0, index * 0.28]}>
-          <planeGeometry args={[destination.scale * 1.72, destination.scale * 1.72]} />
-          <meshBasicMaterial
-            map={spiralTexture}
-            color={destination.accentColor}
-            transparent
-            opacity={destination.id === "milky-way" ? 0.3 : 0.27}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
-          />
-        </mesh>
+        <TwoSidedTexturePlane
+          texture={spiralTexture}
+          color={destination.accentColor}
+          opacity={destination.id === "milky-way" ? 0.3 : 0.27}
+          size={[destination.scale * 1.72, destination.scale * 1.72]}
+          rotationZ={index * 0.28}
+        />
 
         <mesh ref={haloRef} rotation={[Math.PI / 2, 0, index * -0.42]}>
           <ringGeometry
@@ -215,18 +210,15 @@ function GalaxyMarker({
           />
         </mesh>
 
-        <mesh rotation={[Math.PI / 2, 0, index * 0.19]} position={[0, 3, 0]}>
-          <planeGeometry args={[destination.scale * 1.5, destination.scale * 0.95]} />
-          <meshBasicMaterial
-            map={nebulaTexture}
+        <group position={[0, 3, 0]}>
+          <TwoSidedTexturePlane
+            texture={nebulaTexture}
             color={destination.accentColor}
-            transparent
             opacity={0.035}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
+            size={[destination.scale * 1.5, destination.scale * 0.95]}
+            rotationZ={index * 0.19}
           />
-        </mesh>
+        </group>
 
         <pointLight
           color={destination.accentColor}
@@ -249,6 +241,65 @@ function GalaxyMarker({
         </Html>
       </group>
     </DestinationAnchor>
+  );
+}
+
+function TwoSidedTexturePlane({
+  texture,
+  color,
+  opacity,
+  size,
+  rotationZ
+}: {
+  texture: THREE.Texture;
+  color: string;
+  opacity: number;
+  size: [number, number];
+  rotationZ: number;
+}) {
+  return (
+    <group>
+      <TexturePlane
+        texture={texture}
+        color={color}
+        opacity={opacity}
+        size={size}
+        rotation={[-Math.PI / 2, 0, rotationZ]}
+      />
+      <TexturePlane
+        texture={texture}
+        color={color}
+        opacity={opacity}
+        size={size}
+        rotation={[Math.PI / 2, 0, rotationZ]}
+      />
+    </group>
+  );
+}
+
+function TexturePlane({
+  texture,
+  color,
+  opacity,
+  size,
+  rotation
+}: {
+  texture: THREE.Texture;
+  color: string;
+  opacity: number;
+  size: [number, number];
+  rotation: [number, number, number];
+}) {
+  return (
+    <RoundedTexturePlane
+      texture={texture}
+      color={color}
+      width={size[0]}
+      height={size[1]}
+      opacity={opacity}
+      cornerRadius={Math.min(size[0], size[1]) * 0.18}
+      rotation={rotation}
+    />
   );
 }
 

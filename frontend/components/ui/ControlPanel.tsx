@@ -42,6 +42,7 @@ export function ControlPanel({
   dataError = null
 }: ControlPanelProps) {
   const [activeTab, setActiveTab] = useState<PanelTabId>("map");
+  const [isMobilePanelOpen, setIsMobilePanelOpen] = useState(true);
   const timeScale = useSimulationStore((state) => state.timeScale);
   const isPaused = useSimulationStore((state) => state.isPaused);
   const viewMode = useSimulationStore((state) => state.viewMode);
@@ -104,31 +105,46 @@ export function ControlPanel({
   };
 
   return (
-    <section className="pointer-events-none absolute inset-0 z-10 p-3 text-slate-100 md:p-5">
-      <div className="glass-panel pointer-events-auto flex max-h-[calc(100vh-1.5rem)] w-[min(24rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-lg md:max-h-[calc(100vh-2.5rem)]">
-        <div className="border-b border-white/10 p-4 pb-3">
+    <section className="pointer-events-none absolute inset-0 z-10 p-2 text-slate-100 sm:p-3 lg:p-5">
+      <div
+        className={`glass-panel pointer-events-auto absolute inset-x-2 bottom-2 flex flex-col overflow-hidden rounded-xl sm:inset-x-3 sm:bottom-3 lg:static lg:max-h-[calc(100vh-2.5rem)] lg:w-[min(24rem,calc(100vw-2.5rem))] ${
+          isMobilePanelOpen
+            ? "max-h-[58svh] sm:max-h-[54svh] md:max-h-[50svh]"
+            : "max-h-[4.5rem] lg:max-h-[calc(100vh-2.5rem)]"
+        }`}
+      >
+        <div className="border-b border-white/10 p-3 pb-2 sm:p-4 sm:pb-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h1 className="text-lg font-semibold text-white">Space Exploration</h1>
-              <p className="text-xs text-slate-300">Orbital telemetry</p>
+              <h1 className="text-base font-semibold text-white sm:text-lg">Space Exploration</h1>
+              <p className="text-[11px] text-slate-300 sm:text-xs">Orbital telemetry</p>
             </div>
-            <div
-              className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium ${
-                dataSource === "fallback" && !isLoading
-                  ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
-                  : "border-cyan-200/30 bg-cyan-200/10 text-cyan-100"
-              }`}
-              title={dataError ?? undefined}
-            >
-              {isLoading ? "Syncing" : dataSource === "fallback" ? "Fallback" : "Live"}
+            <div className="flex items-center gap-2">
+              <div
+                className={`shrink-0 rounded-md border px-2 py-1 text-xs font-medium ${
+                  dataSource === "fallback" && !isLoading
+                    ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
+                    : "border-cyan-200/30 bg-cyan-200/10 text-cyan-100"
+                }`}
+                title={dataError ?? undefined}
+              >
+                {isLoading ? "Syncing" : dataSource === "fallback" ? "Fallback" : "Live"}
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobilePanelOpen((open) => !open)}
+                className="rounded-md border border-slate-500/30 bg-slate-900/70 px-2 py-1 text-xs font-medium text-slate-200 lg:hidden"
+              >
+                {isMobilePanelOpen ? "Hide" : "Controls"}
+              </button>
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className={`${isMobilePanelOpen ? "grid" : "hidden lg:grid"} mt-2 grid-cols-2 gap-2 sm:mt-3`}>
             <button
               type="button"
               onClick={handlePaused}
-              className="flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-sm font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100"
+              className="flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-xs font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100 sm:min-h-10 sm:text-sm"
             >
               {isPaused ? <Play size={16} /> : <Pause size={16} />}
               {isPaused ? "Resume" : "Pause"}
@@ -144,7 +160,7 @@ export function ControlPanel({
                       : selectedPlanet;
                 setFollowTarget(next);
               }}
-              className="flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-sm font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-45"
+              className="flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-500/30 bg-slate-900/70 px-3 text-xs font-medium text-slate-100 transition hover:border-cyan-200/50 hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-45 sm:min-h-10 sm:text-sm"
               disabled={selectedDestination !== "solar-system"}
             >
               {followTarget ? <LocateFixed size={16} /> : <Eye size={16} />}
@@ -156,7 +172,7 @@ export function ControlPanel({
             </button>
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-1 rounded-md border border-slate-600/30 bg-black/20 p-1">
+          <div className={`${isMobilePanelOpen ? "grid" : "hidden lg:grid"} mt-2 grid-cols-3 gap-1 rounded-md border border-slate-600/30 bg-black/20 p-1 sm:mt-3`}>
             <PanelTab
               active={activeTab === "map"}
               icon={<Map size={15} />}
@@ -178,7 +194,7 @@ export function ControlPanel({
           </div>
         </div>
 
-        <div className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-4 pt-3">
+        <div className={`${isMobilePanelOpen ? "block" : "hidden lg:block"} thin-scrollbar min-h-0 flex-1 overflow-y-auto p-3 pt-2 sm:p-4 sm:pt-3`}>
           {activeTab === "map" ? (
             <MapTab
               activeDestinationKind={activeDestination.kind}
@@ -268,7 +284,7 @@ function MapTab({
         <p className="thin-scrollbar mt-2 max-h-28 overflow-y-auto pr-1 text-xs leading-5 text-slate-300">
           {activeDescription}
         </p>
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
           <DestinationButton
             active={selectedDestination === "local-group"}
             label="Local Group"
@@ -294,7 +310,7 @@ function MapTab({
           </h4>
           <span className="text-[11px] text-slate-500">{visibleSystems.length} nodes</span>
         </div>
-        <div className="mt-2 grid gap-2">
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
           {visibleSystems.map((destination) => (
             <DestinationButton
               key={destination.id}
@@ -357,7 +373,7 @@ function PlanetsTab({
           </p>
         ) : null}
 
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
           {planets.map((planet) => {
             const active = planet.name === selectedPlanet;
 
@@ -367,7 +383,7 @@ function PlanetsTab({
                 type="button"
                 onClick={() => onSelectPlanet(planet.name)}
                 disabled={!canInspectPlanets}
-                className={`grid grid-cols-[1rem_1fr_auto] items-center gap-3 rounded-md border px-3 py-2 text-left transition disabled:cursor-not-allowed ${
+                className={`grid grid-cols-[1rem_1fr_auto] items-center gap-2 rounded-md border px-3 py-2 text-left transition disabled:cursor-not-allowed sm:gap-3 ${
                   active
                     ? "border-cyan-200/60 bg-cyan-200/12 text-cyan-50"
                     : "border-slate-600/25 bg-slate-950/45 text-slate-200 hover:border-cyan-200/35"
@@ -407,7 +423,7 @@ function PlanetsTab({
         <p className="thin-scrollbar mt-2 max-h-32 overflow-y-auto pr-1 text-xs leading-5 text-slate-300">
           {activePlanet.description}
         </p>
-        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4 lg:grid-cols-2">
           <Info label="Orbit" value={`${formatNumber(activePlanet.semiMajorAxisAu, 2)} AU`} />
           <Info label="Speed" value={`${formatNumber(activePlanet.orbitalVelocityKmS, 1)} km/s`} />
           <Info label="Moons" value={formatNumber(activePlanet.moonCount, 0)} />
@@ -477,7 +493,7 @@ function SettingsTab({
               key={speed}
               type="button"
               onClick={() => onSetTimeScale(speed)}
-              className="rounded-md border border-slate-600/35 bg-slate-950/60 px-2 py-1 text-xs text-slate-200 transition hover:border-cyan-200/50"
+              className="rounded-md border border-slate-600/35 bg-slate-950/60 px-2 py-1.5 text-xs text-slate-200 transition hover:border-cyan-200/50"
             >
               {speed}
             </button>
@@ -608,7 +624,7 @@ function PanelTab({
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-9 items-center justify-center gap-1 rounded px-2 text-xs font-medium transition ${
+      className={`flex min-h-9 items-center justify-center gap-1 rounded px-1.5 text-[11px] font-medium transition sm:px-2 sm:text-xs ${
         active ? "bg-cyan-200 text-slate-950" : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
       }`}
     >

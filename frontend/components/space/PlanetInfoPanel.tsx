@@ -26,7 +26,20 @@ export function PlanetInfoPanel({ planet, favorites, onToggleFavorite }: PlanetI
   const [liveEarthData, setLiveEarthData] = useState<NasaEarthImagery | null>(null);
   const [liveMarsData, setLiveMarsData] = useState<NasaMarsRovers | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!window.matchMedia) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(min-width: 1280px)");
+    const syncExpandedState = () => setIsExpanded(mediaQuery.matches);
+
+    syncExpandedState();
+    mediaQuery.addEventListener("change", syncExpandedState);
+    return () => mediaQuery.removeEventListener("change", syncExpandedState);
+  }, []);
 
   useEffect(() => {
     if (!planet) {
@@ -64,7 +77,7 @@ export function PlanetInfoPanel({ planet, favorites, onToggleFavorite }: PlanetI
   const latestMarsPhoto = liveMarsData?.latest_photos?.[0];
 
   return (
-    <div className="absolute bottom-3 right-3 z-10 hidden max-h-[44vh] w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-lg border border-cyan-500/30 bg-slate-950/90 shadow-lg backdrop-blur lg:block md:bottom-5 md:right-5">
+    <div className="absolute right-2 top-2 z-20 max-h-[36svh] w-[min(22rem,calc(100vw-1rem))] overflow-hidden rounded-lg border border-cyan-500/30 bg-slate-950/90 shadow-lg backdrop-blur sm:right-3 sm:top-3 md:bottom-3 md:top-auto md:max-h-[38svh] xl:bottom-5 xl:right-5 xl:max-h-[44vh]">
       {/* Header */}
       <div
         className="flex cursor-pointer items-center justify-between border-b border-cyan-500/20 bg-gradient-to-r from-cyan-900/20 to-transparent px-4 py-3 hover:bg-cyan-900/30"
@@ -81,7 +94,7 @@ export function PlanetInfoPanel({ planet, favorites, onToggleFavorite }: PlanetI
       </div>
 
       {isExpanded && (
-        <div className="thin-scrollbar max-h-[calc(44vh-3rem)] space-y-4 overflow-y-auto p-4">
+        <div className="thin-scrollbar max-h-[calc(36svh-3rem)] space-y-4 overflow-y-auto p-3 sm:p-4 md:max-h-[calc(38svh-3rem)] xl:max-h-[calc(44vh-3rem)]">
           <button
             type="button"
             onClick={() => onToggleFavorite(planet.name)}

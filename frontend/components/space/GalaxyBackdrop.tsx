@@ -4,8 +4,8 @@ import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { RoundedTexturePlane } from "@/components/space/RoundedTexturePlane";
 import { seededRandom } from "@/lib/seeded-random";
-import { tuneBasicMaterialTexture } from "@/lib/three-texture";
 
 interface GalaxyBackdropProps {
   starCount?: number;
@@ -21,7 +21,7 @@ export function GalaxyBackdrop({
   thickness = 18
 }: GalaxyBackdropProps) {
   const pointsRef = useRef<THREE.Points>(null);
-  const galaxyPlaneRef = useRef<THREE.Mesh>(null);
+  const galaxyPlaneRef = useRef<THREE.Group>(null);
   const spriteTexture = useTexture("/sprites/soft-disc.svg") as THREE.Texture;
   const galaxyTexture = useTexture("/nasa/spiral-galaxy-ngc3147.jpg") as THREE.Texture;
 
@@ -87,22 +87,10 @@ export function GalaxyBackdrop({
         />
       </points>
 
-      <mesh
-        ref={galaxyPlaneRef}
-        position={[0, -19, 0]}
-        rotation={[Math.PI / 2, 0, 0]}
-        scale={[112, 112, 1]}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial
-          map={galaxyTexture}
-          transparent
-          opacity={0.18}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-          onUpdate={(material) => tuneBasicMaterialTexture(material.map)}
-        />
-      </mesh>
+      <group ref={galaxyPlaneRef} position={[0, -19, 0]}>
+        <GalaxyTexturePlane texture={galaxyTexture} rotation={[-Math.PI / 2, 0, 0]} />
+        <GalaxyTexturePlane texture={galaxyTexture} rotation={[Math.PI / 2, 0, 0]} />
+      </group>
 
       <mesh position={[0, -18.4, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[30, 68, 192]} />
@@ -116,5 +104,24 @@ export function GalaxyBackdrop({
         />
       </mesh>
     </group>
+  );
+}
+
+function GalaxyTexturePlane({
+  texture,
+  rotation
+}: {
+  texture: THREE.Texture;
+  rotation: [number, number, number];
+}) {
+  return (
+    <RoundedTexturePlane
+      texture={texture}
+      width={112}
+      height={112}
+      opacity={0.18}
+      cornerRadius={20}
+      rotation={rotation}
+    />
   );
 }
